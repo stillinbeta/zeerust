@@ -1,3 +1,5 @@
+[![Build Status](https://travis-ci.org/stillinbeta/zeerust.svg?branch=master)](https://travis-ci.org/stillinbeta/zeerust)
+
 # Zeerust
 
 _[Something — a character design, a building, anything — used to be someone's idea of futuristic.][zeerust]_
