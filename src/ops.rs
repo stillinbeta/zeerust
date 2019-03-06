@@ -113,3 +113,12 @@ pub enum Location16 {
     RegIndirect(Reg16),
     Immediate(u16),
 }
+
+pub enum StatusFlag {
+    Carry,
+    AddSubtract,
+    ParityOverflow,
+    HalfCarry,
+    Zero,
+    Sign,
+}

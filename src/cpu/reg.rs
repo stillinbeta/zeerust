@@ -1,4 +1,4 @@
-use crate::ops::{Reg16, Reg8};
+use crate::ops::{Reg16, Reg8, StatusFlag};
 
 #[derive(Default, Debug)]
 pub struct Registers {
@@ -22,6 +22,31 @@ pub struct Registers {
 }
 
 impl Registers {
+    fn flag_mask(f: &StatusFlag) -> u8 {
+        match f {
+            StatusFlag::Carry => 1 << 0,
+            StatusFlag::AddSubtract => 1 << 1,
+            StatusFlag::ParityOverflow => 1 << 2,
+            // bit 3 is unused
+            StatusFlag::HalfCarry => 1 << 4,
+            // bit 5 is unused
+            StatusFlag::Zero => 1 << 6,
+            StatusFlag::Sign => 1 << 7,
+        }
+    }
+
+    pub fn get_flag(&self, f: &StatusFlag) -> bool {
+        (self.f & Self::flag_mask(f)) != 0
+    }
+
+    pub fn set_flag(&mut self, f: &StatusFlag, set: bool) {
+        if set {
+            self.f |= Self::flag_mask(f)
+        } else {
+            self.f &= !Self::flag_mask(f)
+        }
+    }
+
     pub fn get_reg8(&self, r: &Reg8) -> u8 {
         match r {
             Reg8::A => self.a,
@@ -104,6 +129,45 @@ mod test {
         hp: 0x27,
         lp: 0x28,
     };
+
+    #[test]
+    fn get_flag() {
+        let mut regs = Registers {
+            f: 0b10101010,
+            ..Default::default()
+        };
+
+        assert!(!regs.get_flag(&StatusFlag::Carry));
+        assert!(regs.get_flag(&StatusFlag::AddSubtract));
+        assert!(!regs.get_flag(&StatusFlag::ParityOverflow));
+        assert!(!regs.get_flag(&StatusFlag::HalfCarry));
+        assert!(!regs.get_flag(&StatusFlag::Zero));
+        assert!(regs.get_flag(&StatusFlag::Sign));
+
+        regs.f = 0b01010101;
+
+        assert!(regs.get_flag(&StatusFlag::Carry));
+        assert!(!regs.get_flag(&StatusFlag::AddSubtract));
+        assert!(regs.get_flag(&StatusFlag::ParityOverflow));
+        assert!(regs.get_flag(&StatusFlag::HalfCarry));
+        assert!(regs.get_flag(&StatusFlag::Zero));
+        assert!(!regs.get_flag(&StatusFlag::Sign));
+    }
+
+    #[test]
+    fn set_flag() {
+        let mut regs = Registers::default();
+
+        regs.set_flag(&StatusFlag::Carry, true);
+        assert_eq!("00000001", format!("{:08b}", regs.f));
+        regs.set_flag(&StatusFlag::AddSubtract, false);
+        regs.set_flag(&StatusFlag::ParityOverflow, true);
+        regs.set_flag(&StatusFlag::HalfCarry, false);
+        regs.set_flag(&StatusFlag::Zero, true);
+        regs.set_flag(&StatusFlag::Sign, false);
+
+        assert_eq!("01000101", format!("{:08b}", regs.f))
+    }
 
     #[test]
     fn test_reg8() {

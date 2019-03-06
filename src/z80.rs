@@ -15,7 +15,17 @@ impl Z80 {
             ops::Op::ADD8(dst, src) => {
                 let v1 = self.get_loc8(&dst);
                 let v2 = self.get_loc8(&src);
-                self.set_loc8(&dst, v1 + v2)
+                let (sum, ov) = v1.overflowing_add(v2);
+                self.set_loc8(&dst, sum);
+                // Seven bit carry
+                self.registers.set_flag(&ops::StatusFlag::Carry, (v1 & v2 & 0b01000000) != 0);
+                // Adding
+                self.registers.set_flag(&ops::StatusFlag::AddSubtract, false);
+                self.registers.set_flag(&ops::StatusFlag::ParityOverflow, ov);
+                self.registers.set_flag(&ops::StatusFlag::HalfCarry, (v1 & v2 & 0b00100) != 0);
+                self.registers.set_flag(&ops::StatusFlag::Zero, sum == 0);
+                self.registers.set_flag(&ops::StatusFlag::Sign, (sum & 0b10000000) == 0);
+
             }
         }
     }
@@ -46,7 +56,7 @@ impl Z80 {
 #[cfg(test)]
 mod test {
     use super::Z80;
-    use crate::ops::{Location8, Op, Reg8, Reg16};
+    use crate::ops::{Location8, Op, Reg8, Reg16, StatusFlag};
 
     #[test]
     fn test_get_loc8() {
@@ -100,9 +110,27 @@ mod test {
     #[test]
     fn test_add8() {
         let mut z80 = Z80::default();
-        z80.registers.set_reg8(&Reg8::A, 0x11);
-        z80.exec(Op::ADD8(Location8::Reg(Reg8::A), Location8::Immediate(0xC5)));
-        assert_eq!(0xD6, z80.registers.get_reg8(&Reg8::A))
+        z80.registers.set_reg8(&Reg8::A, 0x64);
+        z80.exec(Op::ADD8(Location8::Reg(Reg8::A), Location8::Immediate(0x44)));
+        assert_eq!(0xA8, z80.registers.get_reg8(&Reg8::A));
+        assert!(!z80.registers.get_flag(&StatusFlag::Sign));
+        assert!(!z80.registers.get_flag(&StatusFlag::Zero));
+        assert!(z80.registers.get_flag(&StatusFlag::HalfCarry));
+        assert!(!z80.registers.get_flag(&StatusFlag::ParityOverflow));
+        assert!(!z80.registers.get_flag(&StatusFlag::AddSubtract));
+        assert!(z80.registers.get_flag(&StatusFlag::Carry));
+
+        z80.registers.set_reg8(&Reg8::A, 0xFF);
+        z80.exec(Op::ADD8(Location8::Reg(Reg8::A), Location8::Immediate(0x01)));
+        assert_eq!(0x00, z80.registers.get_reg8(&Reg8::A));
+        assert!(z80.registers.get_flag(&StatusFlag::Sign));
+        assert!(z80.registers.get_flag(&StatusFlag::Zero));
+        assert!(!z80.registers.get_flag(&StatusFlag::HalfCarry));
+        assert!(z80.registers.get_flag(&StatusFlag::ParityOverflow));
+        assert!(!z80.registers.get_flag(&StatusFlag::AddSubtract));
+        assert!(!z80.registers.get_flag(&StatusFlag::Carry));
+
+
     }
 }
 
