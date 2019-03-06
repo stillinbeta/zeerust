@@ -1,4 +1,4 @@
-enum Ops {
+pub enum Op {
     // ADC, // Add with Carry
     ADD8(Location8, Location8), // Add
     // AND,
@@ -101,14 +101,14 @@ pub enum Reg16 {
     HLP,
 }
 
-enum Location8 {
+pub enum Location8 {
     Reg(Reg8),
     RegIndirect(Reg16),
     Immediate(u8)
     // Indexed()
 }
 
-enum Location16 {
+pub enum Location16 {
     Reg(Reg16),
     RegIndirect(Reg16),
     Immediate(u16),
