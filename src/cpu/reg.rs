@@ -24,7 +24,7 @@ pub struct Registers {
 impl Registers {
     fn flag_mask(f: &StatusFlag) -> u8 {
         match f {
-            StatusFlag::Carry => 1 << 0,
+            StatusFlag::Carry => 1,
             StatusFlag::AddSubtract => 1 << 1,
             StatusFlag::ParityOverflow => 1 << 2,
             // bit 3 is unused
@@ -102,7 +102,7 @@ impl Registers {
             Reg16::DEP => (self.dp, self.ep),
             Reg16::HLP => (self.hp, self.lp),
         };
-        ((r1 as u16) << 8) + (r0 as u16)
+        (u16::from(r1) << 8) + u16::from(r0)
     }
 }
 

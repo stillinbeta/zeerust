@@ -52,7 +52,7 @@ impl Z80 {
         self.registers.set_flag(&ops::StatusFlag::Zero, sum == 0);
         // 8th bit is 1
         self.registers
-            .set_flag(&ops::StatusFlag::Sign, (sum & 0b10000000) != 0);
+            .set_flag(&ops::StatusFlag::Sign, (sum & 0b1000_0000) != 0);
     }
 
     fn add(&mut self, dst: &ops::Location8, src: &ops::Location8, include_carry: bool) {
@@ -68,7 +68,7 @@ impl Z80 {
         self.set_loc8(&dst, sum);
         // Seven bit carry
         self.registers
-            .set_flag(&ops::StatusFlag::Carry, (v1 & v2 & 0b01000000) != 0);
+            .set_flag(&ops::StatusFlag::Carry, (v1 & v2 & 0b0100_0000) != 0);
         // Adding
         self.registers
             .set_flag(&ops::StatusFlag::AddSubtract, false);
@@ -82,7 +82,7 @@ impl Z80 {
         self.registers.set_flag(&ops::StatusFlag::Zero, sum == 0);
         // 8th bit is 1
         self.registers
-            .set_flag(&ops::StatusFlag::Sign, (sum & 0b10000000) != 0);
+            .set_flag(&ops::StatusFlag::Sign, (sum & 0b1000_0000) != 0);
     }
 
     fn get_loc8(&self, loc: &ops::Location8) -> u8 {
