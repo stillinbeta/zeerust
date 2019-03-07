@@ -2,7 +2,7 @@ pub enum Op {
     ADC(Location8, Location8),  // Add including carry
     ADD8(Location8, Location8), // Add
 
-    SBC(Location8, Location8), // Subtract including borrow
+    SBC(Location8, Location8),  // Subtract including borrow
     SUB8(Location8, Location8), // Subtract
     // AND,
     // BIT,

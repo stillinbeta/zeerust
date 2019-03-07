@@ -229,10 +229,7 @@ mod test {
         let mut z80 = Z80::default();
         z80.registers.set_flag(&StatusFlag::Carry, true);
         z80.registers.set_reg8(&Reg8::A, 1);
-        z80.exec(Op::SBC(
-            Location8::Reg(Reg8::A),
-            Location8::Immediate(0),
-        ));
+        z80.exec(Op::SBC(Location8::Reg(Reg8::A), Location8::Immediate(0)));
         assert_bin!(0, z80.registers.get_reg8(&Reg8::A));
         assert!(!z80.registers.get_flag(&StatusFlag::Sign));
         assert!(z80.registers.get_flag(&StatusFlag::Zero));
