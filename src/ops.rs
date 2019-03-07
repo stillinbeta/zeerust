@@ -4,7 +4,11 @@ pub enum Op {
 
     SBC(Location8, Location8),  // Subtract including borrow
     SUB8(Location8, Location8), // Subtract
-    // AND,
+
+    AND(Location8, Location8),
+    OR(Location8, Location8),
+    XOR(Location8, Location8),
+
     // BIT,
     // CALL,
     // CCF,
@@ -38,7 +42,6 @@ pub enum Op {
     // LDIR,
     // NEG,
     // NOP,
-    // OR,
     // OTDR,
     // OTIR,
     // OUT,
@@ -68,7 +71,6 @@ pub enum Op {
     // SL1,
     // SRA,
     // SRL,
-    // XOR,
 }
 
 pub enum Reg8 {
