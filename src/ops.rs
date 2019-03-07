@@ -1,6 +1,9 @@
 pub enum Op {
-    // ADC, // Add with Carry
+    ADC(Location8, Location8),  // Add including carry
     ADD8(Location8, Location8), // Add
+
+    SBC(Location8, Location8), // Subtract including borrow
+    SUB8(Location8, Location8), // Subtract
     // AND,
     // BIT,
     // CALL,
@@ -58,7 +61,6 @@ pub enum Op {
     // RRCA,
     // RRD,
     // RST,
-    // SBC,
     // SCF,
     // SET,
     // SLA,
@@ -66,7 +68,6 @@ pub enum Op {
     // SL1,
     // SRA,
     // SRL,
-    // SUB,
     // XOR,
 }
 
@@ -89,7 +90,6 @@ pub enum Reg8 {
     LP,
 }
 
-
 pub enum Reg16 {
     AF,
     BC,
@@ -104,8 +104,7 @@ pub enum Reg16 {
 pub enum Location8 {
     Reg(Reg8),
     RegIndirect(Reg16),
-    Immediate(u8)
-    // Indexed()
+    Immediate(u8), // Indexed()
 }
 
 pub enum Location16 {

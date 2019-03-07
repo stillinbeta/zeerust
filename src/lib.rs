@@ -1,4 +1,6 @@
+pub mod cpu;
 #[allow(dead_code)]
 pub mod ops;
-pub mod cpu;
+#[macro_use]
+mod assert;
 pub mod z80;

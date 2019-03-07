@@ -1,3 +1,2 @@
-pub mod reg;
 pub mod mem;
-
+pub mod reg;

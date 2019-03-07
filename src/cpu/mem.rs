@@ -6,8 +6,8 @@ pub struct Memory {
 
 impl Default for Memory {
     fn default() -> Self {
-        Memory{
-            memory: [0; MEMORY_SIZE]
+        Memory {
+            memory: [0; MEMORY_SIZE],
         }
     }
 }
