@@ -170,7 +170,7 @@ mod test {
     }
 
     #[test]
-    fn test_reg8() {
+    fn get_set_reg8() {
         let mut regs = Registers::default();
         regs.set_reg8(&Reg8::A, 0x1);
         regs.set_reg8(&Reg8::B, 0x2);
@@ -210,7 +210,7 @@ mod test {
     }
 
     #[test]
-    fn test_reg16() {
+    fn get_reg16() {
         assert_eq!(0x0601, REGS.get_reg16(&Reg16::AF));
         assert_eq!(0x0302, REGS.get_reg16(&Reg16::BC));
         assert_eq!(0x0504, REGS.get_reg16(&Reg16::DE));

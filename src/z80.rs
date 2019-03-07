@@ -146,7 +146,7 @@ mod test {
     use crate::ops::{Location8, Op, Reg16, Reg8, StatusFlag};
 
     #[test]
-    fn test_get_loc8() {
+    fn get_loc8() {
         let mut z80 = Z80::default();
         z80.registers.set_reg8(&Reg8::A, 0xC5);
         z80.registers.set_reg8(&Reg8::H, 0xAA);
@@ -160,7 +160,7 @@ mod test {
 
     #[test]
     #[should_panic]
-    fn test_get_loc8_segfault() {
+    fn get_loc8_segfault() {
         let mut z80 = Z80::default();
         z80.registers.set_reg8(&Reg8::H, 0xFF);
         z80.registers.set_reg8(&Reg8::L, 0xFF);
@@ -169,13 +169,13 @@ mod test {
 
     #[test]
     #[should_panic]
-    fn test_set_loc8_immediate_panic() {
+    fn set_loc8_immediate_panic() {
         let mut z80 = Z80::default();
         z80.set_loc8(&Location8::Immediate(0x00), 0x00);
     }
 
     #[test]
-    fn test_set_loc8_reg() {
+    fn set_loc8_register() {
         let mut z80 = Z80::default();
         z80.set_loc8(&Location8::Reg(Reg8::A), 0xDD);
         assert_hex!(0xDD, z80.registers.get_reg8(&Reg8::A));
@@ -188,14 +188,14 @@ mod test {
     }
 
     #[test]
-    fn test_ld8() {
+    fn ld8_op() {
         let mut z80 = Z80::default();
         z80.exec(Op::LD8(Location8::Reg(Reg8::A), Location8::Immediate(0xF5)));
         assert_hex!(0xF5, z80.registers.get_reg8(&Reg8::A))
     }
 
     #[test]
-    fn test_add8() {
+    fn add8_op() {
         let mut z80 = Z80::default();
         z80.registers.set_reg8(&Reg8::A, 0x64);
         z80.exec(Op::ADD8(
@@ -225,7 +225,7 @@ mod test {
     }
 
     #[test]
-    fn test_adc8() {
+    fn adc8_op() {
         let mut z80 = Z80::default();
         z80.registers.set_reg8(&Reg8::A, 0x64);
         z80.registers.set_flag(&StatusFlag::Carry, true);
@@ -240,7 +240,7 @@ mod test {
     }
 
     #[test]
-    fn test_sub8() {
+    fn sub8_op() {
         let mut z80 = Z80::default();
         z80.registers.set_reg8(&Reg8::A, 0b10100000);
         z80.exec(Op::SUB8(
@@ -257,7 +257,7 @@ mod test {
     }
 
     #[test]
-    fn test_sbc8() {
+    fn sbc8_op() {
         let mut z80 = Z80::default();
         z80.registers.set_flag(&StatusFlag::Carry, true);
         z80.registers.set_reg8(&Reg8::A, 1);
@@ -272,7 +272,7 @@ mod test {
     }
 
     #[test]
-    fn test_and() {
+    fn and_op() {
         let mut z80 = Z80::default();
         z80.registers.set_reg8(&Reg8::A, 0b1001_1000);
         z80.exec(Op::AND(
@@ -289,7 +289,7 @@ mod test {
     }
 
     #[test]
-    fn test_or() {
+    fn or_op() {
         let mut z80 = Z80::default();
         z80.registers.set_reg8(&Reg8::A, 0b1001_1000);
         z80.exec(Op::OR(
@@ -306,7 +306,7 @@ mod test {
     }
 
     #[test]
-    fn test_xor() {
+    fn xor_op() {
         let mut z80 = Z80::default();
         z80.registers.set_reg8(&Reg8::A, 0b0011_1100);
         z80.exec(Op::XOR(
