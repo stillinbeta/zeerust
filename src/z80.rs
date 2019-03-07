@@ -15,8 +15,11 @@ impl Z80 {
 
             ops::Op::ADD8(dst, src) => self.add(&dst, &src, false),
             ops::Op::ADC(dst, src) => self.add(&dst, &src, true),
-            ops::Op::SUB8(dst, src) => self.subtract(&dst, &src, false),
-            ops::Op::SBC(dst, src) => self.subtract(&dst, &src, true),
+            ops::Op::INC(dst) => self.add(&dst, &ops::Location8::Immediate(1), false),
+            ops::Op::SUB8(dst, src) => self.subtract(&dst, &src, false, true),
+            ops::Op::SBC(dst, src) => self.subtract(&dst, &src, true, true),
+            ops::Op::DEC(dst) => self.subtract(&dst, &ops::Location8::Immediate(1), false, true),
+            ops::Op::CP(src) => self.subtract(&ops::Location8::Reg(ops::Reg8::A), &src, false, false),
 
             ops::Op::AND(dst, src) => self.bool_op(&dst, &src, |d, s| d & s),
             ops::Op::OR(dst, src) => self.bool_op(&dst, &src, |d, s| d | s),
@@ -25,12 +28,11 @@ impl Z80 {
     }
 
     fn is_borrow(min: u8, sub: u8, bit: u8) -> bool {
-        let min_is_zero = (min & (1 << bit)) == 0;
-        let sub_is_one = (sub & (1 << bit)) != 0;
-        min_is_zero && sub_is_one
+        let mask = (1 << (bit + 1)) - 1;
+        (min & mask) < (sub & mask)
     }
 
-    fn subtract(&mut self, dst: &ops::Location8, src: &ops::Location8, include_carry: bool) {
+    fn subtract(&mut self, dst: &ops::Location8, src: &ops::Location8, include_carry: bool, store_result: bool) {
         let v1 = self.get_loc8(dst);
         let mut v2 = self.get_loc8(src);
 
@@ -40,7 +42,9 @@ impl Z80 {
         }
 
         let (sum, ov) = v1.overflowing_sub(v2);
-        self.set_loc8(&dst, sum);
+        if store_result {
+            self.set_loc8(&dst, sum);
+        }
 
         // Seven bit carry
         self.registers
@@ -225,6 +229,26 @@ mod test {
     }
 
     #[test]
+    fn inc_op() {
+        let mut z80 = Z80::default();
+        z80.registers.set_reg8(&Reg8::H, 0xCC);
+        z80.registers.set_reg8(&Reg8::L, 0x20);
+        z80.memory.memory[0x20CC] = 0xFF;
+
+        z80.exec(Op::INC(
+            Location8::RegIndirect(Reg16::HL),
+        ));
+
+        assert_hex!(0x00, z80.memory.memory[0x20CC]);
+        assert!(!z80.registers.get_flag(&StatusFlag::Sign));
+        assert!(z80.registers.get_flag(&StatusFlag::Zero));
+        assert!(!z80.registers.get_flag(&StatusFlag::HalfCarry));
+        assert!(z80.registers.get_flag(&StatusFlag::ParityOverflow));
+        assert!(!z80.registers.get_flag(&StatusFlag::AddSubtract));
+        assert!(!z80.registers.get_flag(&StatusFlag::Carry));
+    }
+
+    #[test]
     fn adc8_op() {
         let mut z80 = Z80::default();
         z80.registers.set_reg8(&Reg8::A, 0x64);
@@ -257,6 +281,20 @@ mod test {
     }
 
     #[test]
+    fn cp_op() {
+        let mut z80 = Z80::default();
+        z80.registers.set_reg8(&Reg8::A, 0b1010_0000);
+        z80.exec(Op::CP(Location8::Immediate(0b0100_0100)));
+        assert_bin!(0b1010_0000, z80.registers.get_reg8(&Reg8::A));
+        assert!(!z80.registers.get_flag(&StatusFlag::Sign));
+        assert!(!z80.registers.get_flag(&StatusFlag::Zero));
+        assert!(z80.registers.get_flag(&StatusFlag::HalfCarry));
+        assert!(!z80.registers.get_flag(&StatusFlag::ParityOverflow));
+        assert!(z80.registers.get_flag(&StatusFlag::AddSubtract));
+        assert!(z80.registers.get_flag(&StatusFlag::Carry));
+    }
+
+    #[test]
     fn sbc8_op() {
         let mut z80 = Z80::default();
         z80.registers.set_flag(&StatusFlag::Carry, true);
@@ -266,6 +304,22 @@ mod test {
         assert!(!z80.registers.get_flag(&StatusFlag::Sign));
         assert!(z80.registers.get_flag(&StatusFlag::Zero));
         assert!(!z80.registers.get_flag(&StatusFlag::HalfCarry));
+        assert!(!z80.registers.get_flag(&StatusFlag::ParityOverflow));
+        assert!(z80.registers.get_flag(&StatusFlag::AddSubtract));
+        assert!(!z80.registers.get_flag(&StatusFlag::Carry));
+    }
+
+    #[test]
+    fn dec_op() {
+        let mut z80 = Z80::default();
+        z80.registers.set_reg8(&Reg8::A, 0b1010_0000);
+        z80.exec(Op::DEC(
+            Location8::Reg(Reg8::A),
+        ));
+        assert_bin!(0b1001_1111, z80.registers.get_reg8(&Reg8::A));
+        assert!(z80.registers.get_flag(&StatusFlag::Sign));
+        assert!(!z80.registers.get_flag(&StatusFlag::Zero));
+        assert!(z80.registers.get_flag(&StatusFlag::HalfCarry));
         assert!(!z80.registers.get_flag(&StatusFlag::ParityOverflow));
         assert!(z80.registers.get_flag(&StatusFlag::AddSubtract));
         assert!(!z80.registers.get_flag(&StatusFlag::Carry));
