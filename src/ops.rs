@@ -1,12 +1,12 @@
 pub enum Op {
     ADC(Location8, Location8),  // Add including carry
     ADD8(Location8, Location8), // Add
-    INC(Location8), // Add one
+    INC(Location8),             // Add one
 
     SBC(Location8, Location8),  // Subtract including borrow
     SUB8(Location8, Location8), // Subtract
-    CP(Location8), // Subtract, only setting flags
-    DEC(Location8), // Decement
+    CP(Location8),              // Subtract, only setting flags
+    DEC(Location8),             // Decement
 
     AND(Location8, Location8),
     OR(Location8, Location8),
