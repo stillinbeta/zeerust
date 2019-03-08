@@ -32,6 +32,8 @@ impl Z80 {
             ops::Op::DAA => unimplemented!(),
             ops::Op::CPL => self.compliment(),
             ops::Op::NEG => self.negate(),
+            ops::Op::CCF => self.toggle_carry(),
+            ops::Op::SCF => self.set_carry(),
         }
     }
 
@@ -160,6 +162,21 @@ impl Z80 {
         self.registers
             .set_flag(&ops::StatusFlag::AddSubtract, true);
         self.registers.set_flag(&ops::StatusFlag::Carry, a != 0x00);
+    }
+
+    fn toggle_carry(&mut self) {
+        let carry = self.registers.get_flag(&ops::StatusFlag::Carry);
+        self.registers.set_flag(&ops::StatusFlag::Carry, !carry);
+        self.registers
+            .set_flag(&ops::StatusFlag::AddSubtract, false);
+
+    }
+
+    fn set_carry(&mut self) {
+        self.registers.set_flag(&ops::StatusFlag::Carry, true);
+        self.registers
+            .set_flag(&ops::StatusFlag::AddSubtract, false);
+        self.registers.set_flag(&ops::StatusFlag::HalfCarry, false);
     }
 
     fn get_loc8(&self, loc: &ops::Location8) -> u8 {
@@ -477,5 +494,31 @@ mod test {
         assert!(!z80.registers.get_flag(&StatusFlag::ParityOverflow));
         assert!(z80.registers.get_flag(&StatusFlag::AddSubtract));
         assert!(!z80.registers.get_flag(&StatusFlag::Carry));
+    }
+
+    #[test]
+    fn ccf_op() {
+        let mut z80 = Z80::default();
+        z80.registers.set_flag(&StatusFlag::AddSubtract, true);
+        z80.registers.set_flag(&StatusFlag::Carry, false);
+        z80.exec(Op::CCF);
+        assert!(z80.registers.get_flag(&StatusFlag::Carry));
+        assert!(!z80.registers.get_flag(&StatusFlag::AddSubtract));
+        z80.exec(Op::CCF);
+        assert!(!z80.registers.get_flag(&StatusFlag::Carry));
+        assert!(!z80.registers.get_flag(&StatusFlag::AddSubtract));
+    }
+
+
+    #[test]
+    fn scf_op() {
+        let mut z80 = Z80::default();
+        z80.registers.set_flag(&StatusFlag::AddSubtract, true);
+        z80.registers.set_flag(&StatusFlag::HalfCarry, true);
+        z80.registers.set_flag(&StatusFlag::Carry, false);
+        z80.exec(Op::SCF);
+        assert!(z80.registers.get_flag(&StatusFlag::Carry));
+        assert!(!z80.registers.get_flag(&StatusFlag::AddSubtract));
+        assert!(!z80.registers.get_flag(&StatusFlag::HalfCarry));
     }
 }

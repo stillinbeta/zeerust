@@ -11,14 +11,15 @@ pub enum Op {
     AND(Location8, Location8),
     OR(Location8, Location8),
     XOR(Location8, Location8),
-    CPL,
-    NEG,
+    CPL, // One's Compliment
+    NEG, // Negation (two's compliment)
+    CCF, // toggle carry flag
+    SCF, // set carry flag unconditionally
 
     DAA, // BCD Nonsense. Not implemented.
 
     // BIT,
     // CALL,
-    // CCF,
     // CPD,
     // CPDR,
     // CPI,
@@ -65,7 +66,6 @@ pub enum Op {
     // RRCA,
     // RRD,
     // RST,
-    // SCF,
     // SET,
     // SLA,
     // SLL,
