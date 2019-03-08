@@ -16,6 +16,8 @@ pub enum Op {
     CCF, // toggle carry flag
     SCF, // set carry flag unconditionally
 
+    NOP, // Do nothing
+
     DAA, // BCD Nonsense. Not implemented.
 
     // BIT,
@@ -42,8 +44,6 @@ pub enum Op {
     // LDD,
     // LDDR,
     // LDI,
-    // LDIR,
-    // NOP,
     // OTDR,
     // OTIR,
     // OUT,

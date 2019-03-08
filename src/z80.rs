@@ -34,6 +34,8 @@ impl Z80 {
             ops::Op::NEG => self.negate(),
             ops::Op::CCF => self.toggle_carry(),
             ops::Op::SCF => self.set_carry(),
+
+            ops::Op::NOP => (),
         }
     }
 
