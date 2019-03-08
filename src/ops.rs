@@ -11,6 +11,10 @@ pub enum Op {
     AND(Location8, Location8),
     OR(Location8, Location8),
     XOR(Location8, Location8),
+    CPL,
+    NEG,
+
+    DAA, // BCD Nonsense. Not implemented.
 
     // BIT,
     // CALL,
@@ -19,8 +23,6 @@ pub enum Op {
     // CPDR,
     // CPI,
     // CPIR,
-    // CPL,
-    // DAA,
     // DI,
     // DJNZ,
     // EI,
@@ -40,7 +42,6 @@ pub enum Op {
     // LDDR,
     // LDI,
     // LDIR,
-    // NEG,
     // NOP,
     // OTDR,
     // OTIR,

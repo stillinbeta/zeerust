@@ -28,6 +28,10 @@ impl Z80 {
             ops::Op::AND(dst, src) => self.bool_op(&dst, &src, |d, s| d & s),
             ops::Op::OR(dst, src) => self.bool_op(&dst, &src, |d, s| d | s),
             ops::Op::XOR(dst, src) => self.bool_op(&dst, &src, |d, s| d ^ s),
+
+            ops::Op::DAA => unimplemented!(),
+            ops::Op::CPL => self.compliment(),
+            ops::Op::NEG => self.negate(),
         }
     }
 
@@ -129,6 +133,33 @@ impl Z80 {
         self.registers.set_flag(&ops::StatusFlag::Zero, result == 0);
         self.registers
             .set_flag(&ops::StatusFlag::Sign, (result & 0b1000_0000) != 0);
+    }
+
+    fn compliment(&mut self) {
+        let reg_a = ops::Reg8::A;
+        let a = self.registers.get_reg8(&reg_a);
+        self.registers.set_reg8(&reg_a, !a);
+
+        self.registers.set_flag(&ops::StatusFlag::HalfCarry, true);
+        self.registers.set_flag(&ops::StatusFlag::AddSubtract, true);
+    }
+
+    fn negate(&mut self) {
+        let reg_a = ops::Reg8::A;
+        let a = self.registers.get_reg8(&reg_a);
+
+        let compliment = (1_u16 << 8) - u16::from(a);
+        let [result, _] = compliment.to_le_bytes();
+        // let result = (!a) + 1
+        self.registers.set_reg8(&reg_a, result);
+
+        self.registers.set_flag(&ops::StatusFlag::Sign, (result & 0b1000_0000) != 0);
+        self.registers.set_flag(&ops::StatusFlag::Zero, result == 0);
+        self.registers.set_flag(&ops::StatusFlag::HalfCarry, Self::is_borrow(0, a, 3));
+        self.registers.set_flag(&ops::StatusFlag::ParityOverflow, a == 0x80);
+        self.registers
+            .set_flag(&ops::StatusFlag::AddSubtract, true);
+        self.registers.set_flag(&ops::StatusFlag::Carry, a != 0x00);
     }
 
     fn get_loc8(&self, loc: &ops::Location8) -> u8 {
@@ -379,6 +410,72 @@ mod test {
         assert!(!z80.registers.get_flag(&StatusFlag::HalfCarry));
         assert!(z80.registers.get_flag(&StatusFlag::ParityOverflow));
         assert!(!z80.registers.get_flag(&StatusFlag::AddSubtract));
+        assert!(!z80.registers.get_flag(&StatusFlag::Carry));
+    }
+
+    #[test]
+    #[should_panic]
+    fn daa_op() {
+        let mut z80 = Z80::default();
+        z80.exec(Op::DAA)
+    }
+
+    #[test]
+    fn cpl_op() {
+        let mut z80 = Z80::default();
+        z80.registers.set_reg8(&Reg8::A, 0b1011_1101);
+        z80.exec(Op::CPL);
+        assert_bin!(0b0100_0010, z80.registers.get_reg8(&Reg8::A));
+        assert!(z80.registers.get_flag(&StatusFlag::HalfCarry));
+        assert!(z80.registers.get_flag(&StatusFlag::AddSubtract));
+    }
+
+    #[test]
+    fn neg_op() {
+        let mut z80 = Z80::default();
+        // Sign is positive
+        z80.registers.set_reg8(&Reg8::A, 0b1001_1000);
+        z80.exec(Op::NEG);
+        assert_bin!(0b0110_1000, z80.registers.get_reg8(&Reg8::A));
+        assert!(!z80.registers.get_flag(&StatusFlag::Sign));
+        assert!(!z80.registers.get_flag(&StatusFlag::Zero));
+        assert!(z80.registers.get_flag(&StatusFlag::HalfCarry));
+        assert!(!z80.registers.get_flag(&StatusFlag::ParityOverflow));
+        assert!(z80.registers.get_flag(&StatusFlag::AddSubtract));
+        assert!(z80.registers.get_flag(&StatusFlag::Carry));
+
+        // Sign is negative
+        z80.registers.set_reg8(&Reg8::A, 0b0001_1000);
+        z80.exec(Op::NEG);
+        assert_bin!(0b1110_1000, z80.registers.get_reg8(&Reg8::A));
+        assert!(z80.registers.get_flag(&StatusFlag::Sign));
+        assert!(!z80.registers.get_flag(&StatusFlag::Zero));
+        assert!(z80.registers.get_flag(&StatusFlag::HalfCarry));
+        assert!(!z80.registers.get_flag(&StatusFlag::ParityOverflow));
+        assert!(z80.registers.get_flag(&StatusFlag::AddSubtract));
+        assert!(z80.registers.get_flag(&StatusFlag::Carry));
+
+        // A was 0x80
+        z80.registers.set_reg8(&Reg8::A, 0x80);
+        z80.exec(Op::NEG);
+        // TODO: not 100% on 2's compliment of 0x80
+        assert_bin!(0b1000_0000, z80.registers.get_reg8(&Reg8::A));
+        assert!(z80.registers.get_flag(&StatusFlag::Sign));
+        assert!(!z80.registers.get_flag(&StatusFlag::Zero));
+        assert!(!z80.registers.get_flag(&StatusFlag::HalfCarry));
+        assert!(z80.registers.get_flag(&StatusFlag::ParityOverflow));
+        assert!(z80.registers.get_flag(&StatusFlag::AddSubtract));
+        assert!(z80.registers.get_flag(&StatusFlag::Carry));
+
+        // A was 0x00
+        z80.registers.set_reg8(&Reg8::A, 0b0000_0000);
+        z80.exec(Op::NEG);
+        assert_bin!(0b0000_0000, z80.registers.get_reg8(&Reg8::A));
+        assert!(!z80.registers.get_flag(&StatusFlag::Sign));
+        assert!(z80.registers.get_flag(&StatusFlag::Zero));
+        assert!(!z80.registers.get_flag(&StatusFlag::HalfCarry));
+        assert!(!z80.registers.get_flag(&StatusFlag::ParityOverflow));
+        assert!(z80.registers.get_flag(&StatusFlag::AddSubtract));
         assert!(!z80.registers.get_flag(&StatusFlag::Carry));
     }
 }
