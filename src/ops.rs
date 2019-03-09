@@ -20,6 +20,11 @@ pub enum Op {
 
     DAA, // BCD Nonsense. Not implemented.
 
+    RLCA, // Rotate Accumulator Left, set Carry
+    RLA,  // Rotate Accumulator Left, through carry
+    RRCA, // Rotate Accumulator Right, set Carry
+    RRA,  // Rotate Accumulator Left, through carry
+
     // BIT,
     // CALL,
     // CPD,

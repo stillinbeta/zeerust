@@ -36,6 +36,11 @@ impl Z80 {
             ops::Op::SCF => self.set_carry(),
 
             ops::Op::NOP => (),
+
+            ops::Op::RLCA => self.rotate_left(&Self::ACC),
+            ops::Op::RLA => self.rotate_left_thru_acc(&Self::ACC),
+            ops::Op::RRCA => self.rotate_right(&Self::ACC),
+            ops::Op::RRA => self.rotate_right_thru_acc(&Self::ACC),
         }
     }
 
@@ -121,7 +126,7 @@ impl Z80 {
 
         let result = f(v1, v2);
         self.set_loc8(&dst, result);
-        let parity = (0..8).fold(0, |acc, b| acc + ((result & (1 << b)) == 0) as u8) % 2 == 0;
+        let parity = result.count_zeros() % 2 == 0;
 
         // Seven bit carry is reset
         self.registers.set_flag(&ops::StatusFlag::Carry, false);
@@ -157,12 +162,14 @@ impl Z80 {
         // let result = (!a) + 1
         self.registers.set_reg8(&reg_a, result);
 
-        self.registers.set_flag(&ops::StatusFlag::Sign, (result & 0b1000_0000) != 0);
-        self.registers.set_flag(&ops::StatusFlag::Zero, result == 0);
-        self.registers.set_flag(&ops::StatusFlag::HalfCarry, Self::is_borrow(0, a, 3));
-        self.registers.set_flag(&ops::StatusFlag::ParityOverflow, a == 0x80);
         self.registers
-            .set_flag(&ops::StatusFlag::AddSubtract, true);
+            .set_flag(&ops::StatusFlag::Sign, (result & 0b1000_0000) != 0);
+        self.registers.set_flag(&ops::StatusFlag::Zero, result == 0);
+        self.registers
+            .set_flag(&ops::StatusFlag::HalfCarry, Self::is_borrow(0, a, 3));
+        self.registers
+            .set_flag(&ops::StatusFlag::ParityOverflow, a == 0x80);
+        self.registers.set_flag(&ops::StatusFlag::AddSubtract, true);
         self.registers.set_flag(&ops::StatusFlag::Carry, a != 0x00);
     }
 
@@ -171,7 +178,6 @@ impl Z80 {
         self.registers.set_flag(&ops::StatusFlag::Carry, !carry);
         self.registers
             .set_flag(&ops::StatusFlag::AddSubtract, false);
-
     }
 
     fn set_carry(&mut self) {
@@ -179,6 +185,59 @@ impl Z80 {
         self.registers
             .set_flag(&ops::StatusFlag::AddSubtract, false);
         self.registers.set_flag(&ops::StatusFlag::HalfCarry, false);
+    }
+
+    fn rotate_left(&mut self, loc: &ops::Location8) {
+        let val = self.get_loc8(loc);
+        let result = val.rotate_left(1);
+        self.set_loc8(loc, result);
+        self.registers
+            .set_flag(&ops::StatusFlag::Carry, result & 0x80 != 0);
+        self.registers.set_flag(&ops::StatusFlag::HalfCarry, false);
+        self.registers
+            .set_flag(&ops::StatusFlag::AddSubtract, false);
+    }
+
+    fn rotate_left_thru_acc(&mut self, loc: &ops::Location8) {
+        let val = self.get_loc8(loc);
+        let carry = self.registers.get_flag(&ops::StatusFlag::Carry);
+        let mut result = val << 1;
+        if carry {
+            result |= 0b1;
+        }
+        self.set_loc8(loc, result);
+
+        self.registers
+            .set_flag(&ops::StatusFlag::Carry, val & 0x80 != 0);
+        self.registers.set_flag(&ops::StatusFlag::HalfCarry, false);
+        self.registers
+            .set_flag(&ops::StatusFlag::AddSubtract, false);
+    }
+
+    fn rotate_right(&mut self, loc: &ops::Location8) {
+        let val = self.get_loc8(loc);
+        let result = val.rotate_right(1);
+        self.set_loc8(loc, result);
+        self.registers
+            .set_flag(&ops::StatusFlag::Carry, result & 0b1 != 0);
+        self.registers.set_flag(&ops::StatusFlag::HalfCarry, false);
+        self.registers
+            .set_flag(&ops::StatusFlag::AddSubtract, false);
+    }
+
+    fn rotate_right_thru_acc(&mut self, loc: &ops::Location8) {
+        let val = self.get_loc8(loc);
+        let carry = self.registers.get_flag(&ops::StatusFlag::Carry);
+        let mut result = val >> 1;
+        if carry {
+            result |= 0x80;
+        }
+        self.set_loc8(loc, result);
+        self.registers
+            .set_flag(&ops::StatusFlag::Carry, val & 0b1 != 0);
+        self.registers.set_flag(&ops::StatusFlag::HalfCarry, false);
+        self.registers
+            .set_flag(&ops::StatusFlag::AddSubtract, false);
     }
 
     fn get_loc8(&self, loc: &ops::Location8) -> u8 {
@@ -511,7 +570,6 @@ mod test {
         assert!(!z80.registers.get_flag(&StatusFlag::AddSubtract));
     }
 
-
     #[test]
     fn scf_op() {
         let mut z80 = Z80::default();
@@ -522,5 +580,67 @@ mod test {
         assert!(z80.registers.get_flag(&StatusFlag::Carry));
         assert!(!z80.registers.get_flag(&StatusFlag::AddSubtract));
         assert!(!z80.registers.get_flag(&StatusFlag::HalfCarry));
+    }
+
+    #[test]
+    fn rlca_op() {
+        let mut z80 = Z80::default();
+        z80.registers.set_reg8(&Reg8::A, 0b0101_1011);
+        z80.exec(Op::RLCA);
+        assert_bin!(0b1011_0110, z80.registers.get_reg8(&Reg8::A));
+        assert!(!z80.registers.get_flag(&StatusFlag::HalfCarry));
+        assert!(!z80.registers.get_flag(&StatusFlag::AddSubtract));
+        assert!(z80.registers.get_flag(&StatusFlag::Carry));
+    }
+
+    #[test]
+    fn rla_op() {
+        let mut z80 = Z80::default();
+        z80.registers.set_flag(&StatusFlag::Carry, true);
+        z80.registers.set_reg8(&Reg8::A, 0b1001_1011);
+        z80.exec(Op::RLA);
+        assert_bin!(0b0011_0111, z80.registers.get_reg8(&Reg8::A));
+        assert!(!z80.registers.get_flag(&StatusFlag::HalfCarry));
+        assert!(!z80.registers.get_flag(&StatusFlag::AddSubtract));
+        assert!(z80.registers.get_flag(&StatusFlag::Carry));
+
+        z80.registers.set_flag(&StatusFlag::Carry, false);
+        z80.registers.set_reg8(&Reg8::A, 0b0001_1001);
+        z80.exec(Op::RLA);
+        assert_bin!(0b0011_0010, z80.registers.get_reg8(&Reg8::A));
+        assert!(!z80.registers.get_flag(&StatusFlag::HalfCarry));
+        assert!(!z80.registers.get_flag(&StatusFlag::AddSubtract));
+        assert!(!z80.registers.get_flag(&StatusFlag::Carry));
+    }
+
+    #[test]
+    fn rrca_op() {
+        let mut z80 = Z80::default();
+        z80.registers.set_reg8(&Reg8::A, 0b0110_1001);
+        z80.exec(Op::RRCA);
+        assert_bin!(0b1011_0100, z80.registers.get_reg8(&Reg8::A));
+        assert!(!z80.registers.get_flag(&StatusFlag::HalfCarry));
+        assert!(!z80.registers.get_flag(&StatusFlag::AddSubtract));
+        assert!(!z80.registers.get_flag(&StatusFlag::Carry));
+    }
+
+    #[test]
+    fn rra_op() {
+        let mut z80 = Z80::default();
+        z80.registers.set_flag(&StatusFlag::Carry, true);
+        z80.registers.set_reg8(&Reg8::A, 0b0101_1100);
+        z80.exec(Op::RRA);
+        assert_bin!(0b1010_1110, z80.registers.get_reg8(&Reg8::A));
+        assert!(!z80.registers.get_flag(&StatusFlag::HalfCarry));
+        assert!(!z80.registers.get_flag(&StatusFlag::AddSubtract));
+        assert!(!z80.registers.get_flag(&StatusFlag::Carry));
+
+        z80.registers.set_flag(&StatusFlag::Carry, false);
+        z80.registers.set_reg8(&Reg8::A, 0b1010_1011);
+        z80.exec(Op::RRA);
+        assert_bin!(0b0101_0101, z80.registers.get_reg8(&Reg8::A));
+        assert!(!z80.registers.get_flag(&StatusFlag::HalfCarry));
+        assert!(!z80.registers.get_flag(&StatusFlag::AddSubtract));
+        assert!(z80.registers.get_flag(&StatusFlag::Carry));
     }
 }
