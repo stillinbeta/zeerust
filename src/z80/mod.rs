@@ -1,17 +1,22 @@
+use std::collections::HashMap;
+
 use crate::cpu;
 use crate::ops;
 
+pub mod io;
 #[cfg(test)]
 mod tests;
 
 #[derive(Default)]
-#[allow(dead_code)]
-pub struct Z80 {
+pub struct Z80<'a> {
     registers: cpu::reg::Registers,
     memory: cpu::mem::Memory,
+
+    input_devices: HashMap<u8, &'a io::InputDevice>,
+    output_devices: HashMap<u8, &'a io::OutputDevice>,
 }
 
-impl Z80 {
+impl<'a> Z80<'a> {
     const ONE_IMM: ops::Location8 = ops::Location8::Immediate(1);
     const ACC: ops::Location8 = ops::Location8::Reg(ops::Reg8::A);
     const HL_INDIRECT: ops::Location8 = ops::Location8::RegIndirect(ops::Reg16::HL);
@@ -60,6 +65,9 @@ impl Z80 {
             ops::Op::BIT(b, loc) => self.get_bit(b, &loc),
             ops::Op::SET(b, loc) => self.set_bit(b, &loc),
             ops::Op::RES(b, loc) => self.reset_bit(b, &loc),
+
+            ops::Op::IN(loc, n) => self.read_in(n, &loc),
+            ops::Op::OUT(loc, n) => self.write_out(n, &loc),
         }
     }
 
@@ -353,6 +361,23 @@ impl Z80 {
         assert!(bit < 8);
         let val = self.get_loc8(loc);
         self.set_loc8(loc, val & !(1 << bit));
+    }
+
+    fn read_in(&mut self, peripheral: u8, loc: &ops::Location8) {
+        let result = match self.input_devices.get_mut(&peripheral) {
+            None => panic!("no peripheral installed in 0x{:02x}", peripheral),
+            Some(d) => d.input(),
+        };
+        self.set_loc8(loc, result);
+    }
+
+    fn write_out(&mut self, peripheral: u8, loc: &ops::Location8) {
+        let val = self.get_loc8(loc);
+
+        match self.output_devices.get_mut(&peripheral) {
+            None => panic!("no peripheral installed in 0x{:02x}", peripheral),
+            Some(d) => d.output(val),
+        };
     }
 
     fn parity_flags(&mut self, val: u8) {

@@ -698,3 +698,62 @@ fn res_op_too_big() {
     let mut z80 = Z80::default();
     z80.exec(Op::RES(8, Location8::Reg(Reg8::A)));
 }
+
+#[test]
+fn in_op() {
+    let mut z80 = Z80::default();
+    let buf1 = super::io::BufInput::new(vec![0xF8, 0x33]);
+    let buf2 = super::io::BufInput::new(vec![0xBB, 0xB7]);
+
+    z80.install_input(0x00, &buf1);
+    z80.install_input(0x05, &buf2);
+
+    z80.exec(Op::IN(Location8::Reg(Reg8::A), 0x00));
+    assert_hex!(0x33, z80.registers.get_reg8(&Reg8::A));
+    z80.exec(Op::IN(Location8::Reg(Reg8::A), 0x05));
+    assert_hex!(0xB7, z80.registers.get_reg8(&Reg8::A));
+
+    z80.exec(Op::IN(Location8::Reg(Reg8::A), 0x00));
+    assert_hex!(0xF8, z80.registers.get_reg8(&Reg8::A));
+    z80.exec(Op::IN(Location8::Reg(Reg8::A), 0x05));
+    assert_hex!(0xBB, z80.registers.get_reg8(&Reg8::A));
+}
+
+#[test]
+#[should_panic(expected = "no peripheral installed in 0x00")]
+fn in_no_device_installed() {
+    let mut z80 = Z80::default();
+    z80.exec(Op::IN(Location8::Reg(Reg8::A), 0x00));
+}
+
+#[test]
+fn out_op() {
+    let mut z80 = Z80::default();
+    let buf1 = super::io::BufOutput::default();
+    let buf2 = super::io::BufOutput::default();
+
+    z80.install_output(0x00, &buf1);
+    z80.install_output(0x05, &buf2);
+
+    z80.registers.set_reg8(&Reg8::A, 0xFD);
+    z80.registers.set_reg8(&Reg8::B, 0x69);
+
+    z80.exec(Op::OUT(Location8::Reg(Reg8::A), 0x05));
+    z80.exec(Op::OUT(Location8::Reg(Reg8::B), 0x00));
+
+    z80.registers.set_reg8(&Reg8::A, 0x73);
+    z80.registers.set_reg8(&Reg8::B, 0x5C);
+
+    z80.exec(Op::OUT(Location8::Reg(Reg8::A), 0x00));
+    z80.exec(Op::OUT(Location8::Reg(Reg8::B), 0x05));
+
+    assert_eq!(vec!(0x69, 0x73), buf1.result());
+    assert_eq!(vec!(0xFD, 0x5C), buf2.result());
+}
+
+#[test]
+#[should_panic(expected = "no peripheral installed in 0x00")]
+fn out_no_device_installed() {
+    let mut z80 = Z80::default();
+    z80.exec(Op::OUT(Location8::Reg(Reg8::A), 0x00));
+}
