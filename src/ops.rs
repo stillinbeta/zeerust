@@ -33,6 +33,9 @@ pub enum Op {
     SRL(Location8), // Shift Right
     SRA(Location8), // Shift Right, preserving 7th bit
 
+    RLD, // Rotate nibbles Left through accumulator
+    RRD, // Rotate nibbles Right through accumulator
+
     // BIT,
     // CALL,
     // CPD,

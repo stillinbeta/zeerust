@@ -11,6 +11,7 @@ pub struct Z80 {
 impl Z80 {
     const ONE_IMM: ops::Location8 = ops::Location8::Immediate(1);
     const ACC: ops::Location8 = ops::Location8::Reg(ops::Reg8::A);
+    const HL_INDIRECT: ops::Location8 = ops::Location8::RegIndirect(ops::Reg16::HL);
 
     pub fn exec(&mut self, op: ops::Op) {
         match op {
@@ -49,6 +50,9 @@ impl Z80 {
             ops::Op::SRL(loc) => self.shift_right(&loc, false),
             ops::Op::SLA(loc) => self.shift_left(&loc),
             ops::Op::SRA(loc) => self.shift_right(&loc, true),
+
+            ops::Op::RLD => self.rotate_nibble_left(),
+            ops::Op::RRD => self.rotate_nibble_right(),
         }
     }
 
@@ -269,8 +273,7 @@ impl Z80 {
 
         self.set_loc8(loc, result);
 
-        self.registers
-            .set_flag(&ops::StatusFlag::Carry, carry);
+        self.registers.set_flag(&ops::StatusFlag::Carry, carry);
         self.registers.set_flag(&ops::StatusFlag::HalfCarry, false);
         self.registers
             .set_flag(&ops::StatusFlag::AddSubtract, false);
@@ -284,12 +287,43 @@ impl Z80 {
 
         self.set_loc8(loc, result);
 
-        self.registers
-            .set_flag(&ops::StatusFlag::Carry, carry);
+        self.registers.set_flag(&ops::StatusFlag::Carry, carry);
         self.registers.set_flag(&ops::StatusFlag::HalfCarry, false);
         self.registers
             .set_flag(&ops::StatusFlag::AddSubtract, false);
         self.parity_flags(result);
+    }
+
+    fn rotate_nibble_left(&mut self) {
+        let acc = self.get_loc8(&Self::ACC);
+        let hl = self.get_loc8(&Self::HL_INDIRECT);
+
+        let acc2 = (acc & 0xf0) | (hl >> 4);
+        let hl2 = (hl << 4) | (acc & 0x0f);
+
+        self.set_loc8(&Self::ACC, acc2);
+        self.set_loc8(&Self::HL_INDIRECT, hl2);
+
+        self.registers.set_flag(&ops::StatusFlag::HalfCarry, false);
+        self.registers
+            .set_flag(&ops::StatusFlag::AddSubtract, false);
+        self.parity_flags(acc2);
+    }
+
+    fn rotate_nibble_right(&mut self) {
+        let acc = self.get_loc8(&Self::ACC);
+        let hl = self.get_loc8(&Self::HL_INDIRECT);
+
+        let acc2 = (acc & 0xf0) | (hl & 0x0f);
+        let hl2 = (hl >> 4) | ((acc & 0x0f) << 4);
+
+        self.set_loc8(&Self::ACC, acc2);
+        self.set_loc8(&Self::HL_INDIRECT, hl2);
+
+        self.registers.set_flag(&ops::StatusFlag::HalfCarry, false);
+        self.registers
+            .set_flag(&ops::StatusFlag::AddSubtract, false);
+        self.parity_flags(acc2);
     }
 
     fn parity_flags(&mut self, val: u8) {
@@ -891,6 +925,69 @@ mod test {
             ParityOverflow = false,
             AddSubtract = false,
             Carry = false
+        );
+    }
+
+    #[test]
+    fn rld_op() {
+        let mut z80 = Z80::default();
+        z80.registers.set_reg8(&Reg8::H, 0xCC);
+        z80.registers.set_reg8(&Reg8::L, 0x20);
+        z80.registers.set_reg8(&Reg8::A, 0b0111_1010);
+        z80.memory.memory[0x20CC] = 0b0011_0001;
+
+        z80.exec(Op::RLD);
+
+        assert_bin!(0b0111_0011, z80.registers.get_reg8(&Reg8::A));
+        assert_bin!(0b0001_1010, z80.memory.memory[0x20CC]);
+        assert_flags!(
+            z80.registers,
+            Sign = false,
+            Zero = false,
+            HalfCarry = false,
+            ParityOverflow = false,
+            AddSubtract = false,
+        );
+
+        // Zero accumulator
+        z80.registers.set_reg8(&Reg8::H, 0xCC);
+        z80.registers.set_reg8(&Reg8::L, 0x20);
+        z80.registers.set_reg8(&Reg8::A, 0b0000_1010);
+        z80.memory.memory[0x20CC] = 0b0000_1110;
+
+        z80.exec(Op::RLD);
+
+        assert_bin!(0b0000_0000, z80.registers.get_reg8(&Reg8::A));
+        assert_bin!(0b1110_1010, z80.memory.memory[0x20CC]);
+        assert_flags!(
+            z80.registers,
+            Sign = false,
+            Zero = true,
+            HalfCarry = false,
+            ParityOverflow = true,
+            AddSubtract = false,
+        );
+    }
+
+    #[test]
+    fn rrd_op() {
+        let mut z80 = Z80::default();
+        z80.registers.set_reg8(&Reg8::H, 0xCC);
+        z80.registers.set_reg8(&Reg8::L, 0x20);
+        z80.registers.set_reg8(&Reg8::A, 0b1000_0100);
+        z80.memory.memory[0x20CC] = 0b0010_0000;
+
+        z80.exec(Op::RRD);
+
+        assert_bin!(0b1000_0000, z80.registers.get_reg8(&Reg8::A));
+        assert_bin!(0b0100_0010, z80.memory.memory[0x20CC]);
+        assert_flags!(
+            z80.registers,
+            Sign = true,
+            Zero = false,
+            HalfCarry = false,
+            ParityOverflow = false,
+            AddSubtract = false,
         );
     }
 }
