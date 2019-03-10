@@ -627,3 +627,74 @@ fn rrd_op() {
         AddSubtract = false,
     );
 }
+
+#[test]
+fn bit_op() {
+    let mut z80 = Z80::default();
+    z80.registers.set_reg8(&Reg8::A, 0b1100_0001);
+
+    let expected = [false, true, true, true, true, true, false, false];
+    for (i, expect) in expected.iter().enumerate() {
+        z80.exec(Op::BIT(i as u8, Location8::Reg(Reg8::A)));
+        assert_flags!(
+            z80.registers,
+            Zero = *expect,
+            HalfCarry = true,
+            AddSubtract = false,
+        );
+    }
+}
+
+#[test]
+#[should_panic]
+fn bit_op_too_big() {
+    let mut z80 = Z80::default();
+    z80.exec(Op::BIT(8, Location8::Reg(Reg8::A)));
+}
+
+#[test]
+fn set_op() {
+    let mut z80 = Z80::default();
+    z80.registers.set_reg8(&Reg8::E, 0b1011_0110);
+
+    z80.exec(Op::SET(0, Location8::Reg(Reg8::E)));
+    assert_bin!(0b1011_0111, z80.registers.get_reg8(&Reg8::E));
+    z80.exec(Op::SET(3, Location8::Reg(Reg8::E)));
+    assert_bin!(0b1011_1111, z80.registers.get_reg8(&Reg8::E));
+    z80.exec(Op::SET(6, Location8::Reg(Reg8::E)));
+    assert_bin!(0b1111_1111, z80.registers.get_reg8(&Reg8::E));
+    z80.exec(Op::SET(7, Location8::Reg(Reg8::E)));
+    assert_bin!(0b1111_1111, z80.registers.get_reg8(&Reg8::E));
+}
+
+#[test]
+#[should_panic]
+fn set_op_too_big() {
+    let mut z80 = Z80::default();
+    z80.exec(Op::SET(8, Location8::Reg(Reg8::A)));
+}
+
+#[test]
+fn res_op() {
+    let mut z80 = Z80::default();
+    z80.registers.set_reg8(&Reg8::D, 0b1101_1001);
+    z80.exec(Op::RES(0, Location8::Reg(Reg8::D)));
+    assert_bin!(0b1101_1000, z80.registers.get_reg8(&Reg8::D));
+    z80.exec(Op::RES(3, Location8::Reg(Reg8::D)));
+    assert_bin!(0b1101_0000, z80.registers.get_reg8(&Reg8::D));
+    z80.exec(Op::RES(4, Location8::Reg(Reg8::D)));
+    assert_bin!(0b1100_0000, z80.registers.get_reg8(&Reg8::D));
+    z80.exec(Op::RES(5, Location8::Reg(Reg8::D)));
+    assert_bin!(0b1100_0000, z80.registers.get_reg8(&Reg8::D));
+    z80.exec(Op::RES(6, Location8::Reg(Reg8::D)));
+    assert_bin!(0b1000_0000, z80.registers.get_reg8(&Reg8::D));
+    z80.exec(Op::RES(7, Location8::Reg(Reg8::D)));
+    assert_bin!(0b0000_0000, z80.registers.get_reg8(&Reg8::D));
+}
+
+#[test]
+#[should_panic]
+fn res_op_too_big() {
+    let mut z80 = Z80::default();
+    z80.exec(Op::RES(8, Location8::Reg(Reg8::A)));
+}

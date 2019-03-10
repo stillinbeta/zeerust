@@ -34,7 +34,7 @@ impl Z80 {
             ops::Op::XOR(dst, src) => self.bool_op(&dst, &src, |d, s| d ^ s),
 
             ops::Op::DAA => unimplemented!(),
-            ops::Op::CPL => self.compliment(),
+            ops::Op::CPL => self.complement(),
             ops::Op::NEG => self.negate(),
             ops::Op::CCF => self.toggle_carry(),
             ops::Op::SCF => self.set_carry(),
@@ -56,6 +56,10 @@ impl Z80 {
 
             ops::Op::RLD => self.rotate_nibble_left(),
             ops::Op::RRD => self.rotate_nibble_right(),
+
+            ops::Op::BIT(b, loc) => self.get_bit(b, &loc),
+            ops::Op::SET(b, loc) => self.set_bit(b, &loc),
+            ops::Op::RES(b, loc) => self.reset_bit(b, &loc),
         }
     }
 
@@ -153,7 +157,7 @@ impl Z80 {
         self.parity_flags(result);
     }
 
-    fn compliment(&mut self) {
+    fn complement(&mut self) {
         let reg_a = ops::Reg8::A;
         let a = self.registers.get_reg8(&reg_a);
         self.registers.set_reg8(&reg_a, !a);
@@ -166,8 +170,8 @@ impl Z80 {
         let reg_a = ops::Reg8::A;
         let a = self.registers.get_reg8(&reg_a);
 
-        let compliment = (1_u16 << 8) - u16::from(a);
-        let [result, _] = compliment.to_le_bytes();
+        let complement = (1_u16 << 8) - u16::from(a);
+        let [result, _] = complement.to_le_bytes();
         // let result = (!a) + 1
         self.registers.set_reg8(&reg_a, result);
 
@@ -329,6 +333,28 @@ impl Z80 {
         self.parity_flags(acc2);
     }
 
+    fn get_bit(&mut self, bit: u8, loc: &ops::Location8) {
+        assert!(bit < 8);
+        let val = self.get_loc8(loc);
+        self.registers
+            .set_flag(&ops::StatusFlag::Zero, val & (1 << bit) == 0);
+        self.registers.set_flag(&ops::StatusFlag::HalfCarry, true);
+        self.registers
+            .set_flag(&ops::StatusFlag::AddSubtract, false);
+    }
+
+    fn set_bit(&mut self, bit: u8, loc: &ops::Location8) {
+        assert!(bit < 8);
+        let val = self.get_loc8(loc);
+        self.set_loc8(loc, val | (1 << bit))
+    }
+
+    fn reset_bit(&mut self, bit: u8, loc: &ops::Location8) {
+        assert!(bit < 8);
+        let val = self.get_loc8(loc);
+        self.set_loc8(loc, val & !(1 << bit));
+    }
+
     fn parity_flags(&mut self, val: u8) {
         let parity = val.count_zeros() % 2 == 0;
 
@@ -361,4 +387,3 @@ impl Z80 {
         }
     }
 }
-

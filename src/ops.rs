@@ -36,7 +36,10 @@ pub enum Op {
     RLD, // Rotate nibbles Left through accumulator
     RRD, // Rotate nibbles Right through accumulator
 
-    // BIT,
+    BIT(u8, Location8), // set Zero flag if BIT is on
+    SET(u8, Location8), // SET b bit in location
+    RES(u8, Location8), // RESet b bit in location
+
     // CALL,
     // CPD,
     // CPDR,
@@ -67,14 +70,10 @@ pub enum Op {
     // OUTI,
     // POP,
     // PUSH,
-    // RES,
     // RET,
     // RETI,
     // RETN,
-    // RLD,
-    // RRD,
     // RST,
-    // SET,
     // SLA,
     // SLL,
     // SL1,
