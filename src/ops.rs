@@ -29,6 +29,10 @@ pub enum Op {
     RRC(Location8), // Rotate Right, set Carry
     RR(Location8),  // Rotate Right, through carry
 
+    SLA(Location8), // Shift Left
+    SRL(Location8), // Shift Right
+    SRA(Location8), // Shift Right, preserving 7th bit
+
     // BIT,
     // CALL,
     // CPD,
@@ -64,15 +68,7 @@ pub enum Op {
     // RET,
     // RETI,
     // RETN,
-    // RL,
-    // RLA,
-    // RLC,
-    // RLCA,
     // RLD,
-    // RR,
-    // RRA,
-    // RRC,
-    // RRCA,
     // RRD,
     // RST,
     // SET,
