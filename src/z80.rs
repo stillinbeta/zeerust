@@ -196,7 +196,7 @@ impl Z80 {
             .set_flag(&ops::StatusFlag::AddSubtract, false);
 
         if set_parity {
-           self.parity_flags(result)
+            self.parity_flags(result)
         }
     }
 
@@ -262,7 +262,6 @@ impl Z80 {
         self.registers.set_flag(&ops::StatusFlag::Zero, val == 0);
         self.registers
             .set_flag(&ops::StatusFlag::Sign, (val & 0b1000_0000) != 0);
-
     }
 
     fn get_loc8(&self, loc: &ops::Location8) -> u8 {
@@ -351,12 +350,15 @@ mod test {
             Location8::Immediate(0x44),
         ));
         assert_hex!(0xA8, z80.registers.get_reg8(&Reg8::A));
-        assert!(z80.registers.get_flag(&StatusFlag::Sign));
-        assert!(!z80.registers.get_flag(&StatusFlag::Zero));
-        assert!(z80.registers.get_flag(&StatusFlag::HalfCarry));
-        assert!(!z80.registers.get_flag(&StatusFlag::ParityOverflow));
-        assert!(!z80.registers.get_flag(&StatusFlag::AddSubtract));
-        assert!(z80.registers.get_flag(&StatusFlag::Carry));
+        assert_flags!(
+            z80.registers,
+            Sign = true,
+            Zero = false,
+            HalfCarry = true,
+            ParityOverflow = false,
+            AddSubtract = false,
+            Carry = true,
+        );
 
         z80.registers.set_reg8(&Reg8::A, 0xFF);
         z80.exec(Op::ADD8(
@@ -364,12 +366,15 @@ mod test {
             Location8::Immediate(0x01),
         ));
         assert_hex!(0x00, z80.registers.get_reg8(&Reg8::A));
-        assert!(!z80.registers.get_flag(&StatusFlag::Sign));
-        assert!(z80.registers.get_flag(&StatusFlag::Zero));
-        assert!(!z80.registers.get_flag(&StatusFlag::HalfCarry));
-        assert!(z80.registers.get_flag(&StatusFlag::ParityOverflow));
-        assert!(!z80.registers.get_flag(&StatusFlag::AddSubtract));
-        assert!(!z80.registers.get_flag(&StatusFlag::Carry));
+        assert_flags!(
+            z80.registers,
+            Sign = false,
+            Zero = true,
+            HalfCarry = false,
+            ParityOverflow = true,
+            AddSubtract = false,
+            Carry = false,
+        );
     }
 
     #[test]
@@ -382,12 +387,15 @@ mod test {
         z80.exec(Op::INC(Location8::RegIndirect(Reg16::HL)));
 
         assert_hex!(0x00, z80.memory.memory[0x20CC]);
-        assert!(!z80.registers.get_flag(&StatusFlag::Sign));
-        assert!(z80.registers.get_flag(&StatusFlag::Zero));
-        assert!(!z80.registers.get_flag(&StatusFlag::HalfCarry));
-        assert!(z80.registers.get_flag(&StatusFlag::ParityOverflow));
-        assert!(!z80.registers.get_flag(&StatusFlag::AddSubtract));
-        assert!(!z80.registers.get_flag(&StatusFlag::Carry));
+        assert_flags!(
+            z80.registers,
+            Sign = false,
+            Zero = true,
+            HalfCarry = false,
+            ParityOverflow = true,
+            AddSubtract = false,
+            Carry = false,
+        );
     }
 
     #[test]
@@ -397,12 +405,15 @@ mod test {
         z80.registers.set_flag(&StatusFlag::Carry, true);
         z80.exec(Op::ADC(Location8::Reg(Reg8::A), Location8::Immediate(0x44)));
         assert_hex!(0xA9, z80.registers.get_reg8(&Reg8::A));
-        assert!(z80.registers.get_flag(&StatusFlag::Sign));
-        assert!(!z80.registers.get_flag(&StatusFlag::Zero));
-        assert!(z80.registers.get_flag(&StatusFlag::HalfCarry));
-        assert!(!z80.registers.get_flag(&StatusFlag::ParityOverflow));
-        assert!(!z80.registers.get_flag(&StatusFlag::AddSubtract));
-        assert!(z80.registers.get_flag(&StatusFlag::Carry));
+        assert_flags!(
+            z80.registers,
+            Sign = true,
+            Zero = false,
+            HalfCarry = true,
+            ParityOverflow = false,
+            AddSubtract = false,
+            Carry = true,
+        );
     }
 
     #[test]
@@ -414,12 +425,15 @@ mod test {
             Location8::Immediate(0b01000100),
         ));
         assert_bin!(0b01011100, z80.registers.get_reg8(&Reg8::A));
-        assert!(!z80.registers.get_flag(&StatusFlag::Sign));
-        assert!(!z80.registers.get_flag(&StatusFlag::Zero));
-        assert!(z80.registers.get_flag(&StatusFlag::HalfCarry));
-        assert!(!z80.registers.get_flag(&StatusFlag::ParityOverflow));
-        assert!(z80.registers.get_flag(&StatusFlag::AddSubtract));
-        assert!(z80.registers.get_flag(&StatusFlag::Carry));
+        assert_flags!(
+            z80.registers,
+            Sign = false,
+            Zero = false,
+            HalfCarry = true,
+            ParityOverflow = false,
+            AddSubtract = true,
+            Carry = true,
+        );
     }
 
     #[test]
@@ -428,12 +442,15 @@ mod test {
         z80.registers.set_reg8(&Reg8::A, 0b1010_0000);
         z80.exec(Op::CP(Location8::Immediate(0b0100_0100)));
         assert_bin!(0b1010_0000, z80.registers.get_reg8(&Reg8::A));
-        assert!(!z80.registers.get_flag(&StatusFlag::Sign));
-        assert!(!z80.registers.get_flag(&StatusFlag::Zero));
-        assert!(z80.registers.get_flag(&StatusFlag::HalfCarry));
-        assert!(!z80.registers.get_flag(&StatusFlag::ParityOverflow));
-        assert!(z80.registers.get_flag(&StatusFlag::AddSubtract));
-        assert!(z80.registers.get_flag(&StatusFlag::Carry));
+        assert_flags!(
+            z80.registers,
+            Sign = false,
+            Zero = false,
+            HalfCarry = true,
+            ParityOverflow = false,
+            AddSubtract = true,
+            Carry = true,
+        );
     }
 
     #[test]
@@ -443,12 +460,15 @@ mod test {
         z80.registers.set_reg8(&Reg8::A, 1);
         z80.exec(Op::SBC(Location8::Reg(Reg8::A), Location8::Immediate(0)));
         assert_bin!(0, z80.registers.get_reg8(&Reg8::A));
-        assert!(!z80.registers.get_flag(&StatusFlag::Sign));
-        assert!(z80.registers.get_flag(&StatusFlag::Zero));
-        assert!(!z80.registers.get_flag(&StatusFlag::HalfCarry));
-        assert!(!z80.registers.get_flag(&StatusFlag::ParityOverflow));
-        assert!(z80.registers.get_flag(&StatusFlag::AddSubtract));
-        assert!(!z80.registers.get_flag(&StatusFlag::Carry));
+        assert_flags!(
+            z80.registers,
+            Sign = false,
+            Zero = true,
+            HalfCarry = false,
+            ParityOverflow = false,
+            AddSubtract = true,
+            Carry = false,
+        );
     }
 
     #[test]
@@ -457,12 +477,15 @@ mod test {
         z80.registers.set_reg8(&Reg8::A, 0b1010_0000);
         z80.exec(Op::DEC(Location8::Reg(Reg8::A)));
         assert_bin!(0b1001_1111, z80.registers.get_reg8(&Reg8::A));
-        assert!(z80.registers.get_flag(&StatusFlag::Sign));
-        assert!(!z80.registers.get_flag(&StatusFlag::Zero));
-        assert!(z80.registers.get_flag(&StatusFlag::HalfCarry));
-        assert!(!z80.registers.get_flag(&StatusFlag::ParityOverflow));
-        assert!(z80.registers.get_flag(&StatusFlag::AddSubtract));
-        assert!(!z80.registers.get_flag(&StatusFlag::Carry));
+        assert_flags!(
+            z80.registers,
+            Sign = true,
+            Zero = false,
+            HalfCarry = true,
+            ParityOverflow = false,
+            AddSubtract = true,
+            Carry = false,
+        );
     }
 
     #[test]
@@ -474,12 +497,15 @@ mod test {
             Location8::Immediate(0b0000_0000),
         ));
         assert_bin!(0b0000_0000, z80.registers.get_reg8(&Reg8::A));
-        assert!(!z80.registers.get_flag(&StatusFlag::Sign));
-        assert!(z80.registers.get_flag(&StatusFlag::Zero));
-        assert!(!z80.registers.get_flag(&StatusFlag::HalfCarry));
-        assert!(z80.registers.get_flag(&StatusFlag::ParityOverflow));
-        assert!(!z80.registers.get_flag(&StatusFlag::AddSubtract));
-        assert!(!z80.registers.get_flag(&StatusFlag::Carry));
+        assert_flags!(
+            z80.registers,
+            Sign = false,
+            Zero = true,
+            HalfCarry = false,
+            ParityOverflow = true,
+            AddSubtract = false,
+            Carry = false,
+        );
     }
 
     #[test]
@@ -491,12 +517,15 @@ mod test {
             Location8::Immediate(0b0001_1011),
         ));
         assert_bin!(0b1001_1011, z80.registers.get_reg8(&Reg8::A));
-        assert!(z80.registers.get_flag(&StatusFlag::Sign));
-        assert!(!z80.registers.get_flag(&StatusFlag::Zero));
-        assert!(!z80.registers.get_flag(&StatusFlag::HalfCarry));
-        assert!(!z80.registers.get_flag(&StatusFlag::ParityOverflow));
-        assert!(!z80.registers.get_flag(&StatusFlag::AddSubtract));
-        assert!(!z80.registers.get_flag(&StatusFlag::Carry));
+        assert_flags!(
+            z80.registers,
+            Sign = true,
+            Zero = false,
+            HalfCarry = false,
+            ParityOverflow = false,
+            AddSubtract = false,
+            Carry = false,
+        );
     }
 
     #[test]
@@ -508,19 +537,22 @@ mod test {
             Location8::Immediate(0b0001_1011),
         ));
         assert_bin!(0b0010_0111, z80.registers.get_reg8(&Reg8::A));
-        assert!(!z80.registers.get_flag(&StatusFlag::Sign));
-        assert!(!z80.registers.get_flag(&StatusFlag::Zero));
-        assert!(!z80.registers.get_flag(&StatusFlag::HalfCarry));
-        assert!(z80.registers.get_flag(&StatusFlag::ParityOverflow));
-        assert!(!z80.registers.get_flag(&StatusFlag::AddSubtract));
-        assert!(!z80.registers.get_flag(&StatusFlag::Carry));
+        assert_flags!(
+            z80.registers,
+            Sign = false,
+            Zero = false,
+            HalfCarry = false,
+            ParityOverflow = true,
+            AddSubtract = false,
+            Carry = false,
+        );
     }
 
     #[test]
     #[should_panic]
     fn daa_op() {
         let mut z80 = Z80::default();
-        z80.exec(Op::DAA)
+        z80.exec(Op::DAA);
     }
 
     #[test]
@@ -529,8 +561,7 @@ mod test {
         z80.registers.set_reg8(&Reg8::A, 0b1011_1101);
         z80.exec(Op::CPL);
         assert_bin!(0b0100_0010, z80.registers.get_reg8(&Reg8::A));
-        assert!(z80.registers.get_flag(&StatusFlag::HalfCarry));
-        assert!(z80.registers.get_flag(&StatusFlag::AddSubtract));
+        assert_flags!(z80.registers, HalfCarry = true, AddSubtract = true,);
     }
 
     #[test]
@@ -540,46 +571,58 @@ mod test {
         z80.registers.set_reg8(&Reg8::A, 0b1001_1000);
         z80.exec(Op::NEG);
         assert_bin!(0b0110_1000, z80.registers.get_reg8(&Reg8::A));
-        assert!(!z80.registers.get_flag(&StatusFlag::Sign));
-        assert!(!z80.registers.get_flag(&StatusFlag::Zero));
-        assert!(z80.registers.get_flag(&StatusFlag::HalfCarry));
-        assert!(!z80.registers.get_flag(&StatusFlag::ParityOverflow));
-        assert!(z80.registers.get_flag(&StatusFlag::AddSubtract));
-        assert!(z80.registers.get_flag(&StatusFlag::Carry));
+        assert_flags!(
+            z80.registers,
+            Sign = false,
+            Zero = false,
+            HalfCarry = true,
+            ParityOverflow = false,
+            AddSubtract = true,
+            Carry = true,
+        );
 
         // Sign is negative
         z80.registers.set_reg8(&Reg8::A, 0b0001_1000);
         z80.exec(Op::NEG);
         assert_bin!(0b1110_1000, z80.registers.get_reg8(&Reg8::A));
-        assert!(z80.registers.get_flag(&StatusFlag::Sign));
-        assert!(!z80.registers.get_flag(&StatusFlag::Zero));
-        assert!(z80.registers.get_flag(&StatusFlag::HalfCarry));
-        assert!(!z80.registers.get_flag(&StatusFlag::ParityOverflow));
-        assert!(z80.registers.get_flag(&StatusFlag::AddSubtract));
-        assert!(z80.registers.get_flag(&StatusFlag::Carry));
+        assert_flags!(
+            z80.registers,
+            Sign = true,
+            Zero = false,
+            HalfCarry = true,
+            ParityOverflow = false,
+            AddSubtract = true,
+            Carry = true,
+        );
 
         // A was 0x80
         z80.registers.set_reg8(&Reg8::A, 0x80);
         z80.exec(Op::NEG);
         // TODO: not 100% on 2's compliment of 0x80
         assert_bin!(0b1000_0000, z80.registers.get_reg8(&Reg8::A));
-        assert!(z80.registers.get_flag(&StatusFlag::Sign));
-        assert!(!z80.registers.get_flag(&StatusFlag::Zero));
-        assert!(!z80.registers.get_flag(&StatusFlag::HalfCarry));
-        assert!(z80.registers.get_flag(&StatusFlag::ParityOverflow));
-        assert!(z80.registers.get_flag(&StatusFlag::AddSubtract));
-        assert!(z80.registers.get_flag(&StatusFlag::Carry));
+        assert_flags!(
+            z80.registers,
+            Sign = true,
+            Zero = false,
+            HalfCarry = false,
+            ParityOverflow = true,
+            AddSubtract = true,
+            Carry = true,
+        );
 
         // A was 0x00
         z80.registers.set_reg8(&Reg8::A, 0b0000_0000);
         z80.exec(Op::NEG);
         assert_bin!(0b0000_0000, z80.registers.get_reg8(&Reg8::A));
-        assert!(!z80.registers.get_flag(&StatusFlag::Sign));
-        assert!(z80.registers.get_flag(&StatusFlag::Zero));
-        assert!(!z80.registers.get_flag(&StatusFlag::HalfCarry));
-        assert!(!z80.registers.get_flag(&StatusFlag::ParityOverflow));
-        assert!(z80.registers.get_flag(&StatusFlag::AddSubtract));
-        assert!(!z80.registers.get_flag(&StatusFlag::Carry));
+        assert_flags!(
+            z80.registers,
+            Sign = false,
+            Zero = true,
+            HalfCarry = false,
+            ParityOverflow = false,
+            AddSubtract = true,
+            Carry = false,
+        );
     }
 
     #[test]
@@ -588,11 +631,9 @@ mod test {
         z80.registers.set_flag(&StatusFlag::AddSubtract, true);
         z80.registers.set_flag(&StatusFlag::Carry, false);
         z80.exec(Op::CCF);
-        assert!(z80.registers.get_flag(&StatusFlag::Carry));
-        assert!(!z80.registers.get_flag(&StatusFlag::AddSubtract));
+        assert_flags!(z80.registers, Carry = true, AddSubtract = false,);
         z80.exec(Op::CCF);
-        assert!(!z80.registers.get_flag(&StatusFlag::Carry));
-        assert!(!z80.registers.get_flag(&StatusFlag::AddSubtract));
+        assert_flags!(z80.registers, Carry = false, AddSubtract = false,);
     }
 
     #[test]
@@ -602,9 +643,12 @@ mod test {
         z80.registers.set_flag(&StatusFlag::HalfCarry, true);
         z80.registers.set_flag(&StatusFlag::Carry, false);
         z80.exec(Op::SCF);
-        assert!(z80.registers.get_flag(&StatusFlag::Carry));
-        assert!(!z80.registers.get_flag(&StatusFlag::AddSubtract));
-        assert!(!z80.registers.get_flag(&StatusFlag::HalfCarry));
+        assert_flags!(
+            z80.registers,
+            Carry = true,
+            AddSubtract = false,
+            HalfCarry = false,
+        );
     }
 
     #[test]
@@ -613,9 +657,12 @@ mod test {
         z80.registers.set_reg8(&Reg8::A, 0b0101_1011);
         z80.exec(Op::RLCA);
         assert_bin!(0b1011_0110, z80.registers.get_reg8(&Reg8::A));
-        assert!(!z80.registers.get_flag(&StatusFlag::HalfCarry));
-        assert!(!z80.registers.get_flag(&StatusFlag::AddSubtract));
-        assert!(z80.registers.get_flag(&StatusFlag::Carry));
+        assert_flags!(
+            z80.registers,
+            HalfCarry = false,
+            AddSubtract = false,
+            Carry = true,
+        );
     }
 
     #[test]
@@ -625,17 +672,23 @@ mod test {
         z80.registers.set_reg8(&Reg8::A, 0b1001_1011);
         z80.exec(Op::RLA);
         assert_bin!(0b0011_0111, z80.registers.get_reg8(&Reg8::A));
-        assert!(!z80.registers.get_flag(&StatusFlag::HalfCarry));
-        assert!(!z80.registers.get_flag(&StatusFlag::AddSubtract));
-        assert!(z80.registers.get_flag(&StatusFlag::Carry));
+        assert_flags!(
+            z80.registers,
+            HalfCarry = false,
+            AddSubtract = false,
+            Carry = true,
+        );
 
         z80.registers.set_flag(&StatusFlag::Carry, false);
         z80.registers.set_reg8(&Reg8::A, 0b0001_1001);
         z80.exec(Op::RLA);
         assert_bin!(0b0011_0010, z80.registers.get_reg8(&Reg8::A));
-        assert!(!z80.registers.get_flag(&StatusFlag::HalfCarry));
-        assert!(!z80.registers.get_flag(&StatusFlag::AddSubtract));
-        assert!(!z80.registers.get_flag(&StatusFlag::Carry));
+        assert_flags!(
+            z80.registers,
+            HalfCarry = false,
+            AddSubtract = false,
+            Carry = false,
+        );
     }
 
     #[test]
@@ -644,9 +697,12 @@ mod test {
         z80.registers.set_reg8(&Reg8::A, 0b0110_1001);
         z80.exec(Op::RRCA);
         assert_bin!(0b1011_0100, z80.registers.get_reg8(&Reg8::A));
-        assert!(!z80.registers.get_flag(&StatusFlag::HalfCarry));
-        assert!(!z80.registers.get_flag(&StatusFlag::AddSubtract));
-        assert!(!z80.registers.get_flag(&StatusFlag::Carry));
+        assert_flags!(
+            z80.registers,
+            HalfCarry = false,
+            AddSubtract = false,
+            Carry = false,
+        );
     }
 
     #[test]
@@ -656,17 +712,24 @@ mod test {
         z80.registers.set_reg8(&Reg8::A, 0b0101_1100);
         z80.exec(Op::RRA);
         assert_bin!(0b1010_1110, z80.registers.get_reg8(&Reg8::A));
-        assert!(!z80.registers.get_flag(&StatusFlag::HalfCarry));
-        assert!(!z80.registers.get_flag(&StatusFlag::AddSubtract));
-        assert!(!z80.registers.get_flag(&StatusFlag::Carry));
+        assert_flags!(
+            z80.registers,
+            HalfCarry = false,
+            AddSubtract = false,
+            Carry = false,
+        );
 
         z80.registers.set_flag(&StatusFlag::Carry, false);
         z80.registers.set_reg8(&Reg8::A, 0b1010_1011);
         z80.exec(Op::RRA);
         assert_bin!(0b0101_0101, z80.registers.get_reg8(&Reg8::A));
-        assert!(!z80.registers.get_flag(&StatusFlag::HalfCarry));
-        assert!(!z80.registers.get_flag(&StatusFlag::AddSubtract));
-        assert!(z80.registers.get_flag(&StatusFlag::Carry));
+
+        assert_flags!(
+            z80.registers,
+            HalfCarry = false,
+            AddSubtract = false,
+            Carry = true,
+        );
     }
 
     #[test]
@@ -676,12 +739,16 @@ mod test {
         z80.registers.set_reg8(&Reg8::B, 0b1111_0000);
         z80.exec(Op::RLC(Location8::Reg(Reg8::B)));
         assert_bin!(0b1110_0001, z80.registers.get_reg8(&Reg8::B));
-        assert!(z80.registers.get_flag(&StatusFlag::Sign));
-        assert!(!z80.registers.get_flag(&StatusFlag::Zero));
-        assert!(!z80.registers.get_flag(&StatusFlag::HalfCarry));
-        assert!(z80.registers.get_flag(&StatusFlag::ParityOverflow));
-        assert!(!z80.registers.get_flag(&StatusFlag::AddSubtract));
-        assert!(z80.registers.get_flag(&StatusFlag::Carry));
+
+        assert_flags!(
+            z80.registers,
+            Sign = true,
+            Zero = false,
+            HalfCarry = false,
+            ParityOverflow = true,
+            AddSubtract = false,
+            Carry = true,
+        );
     }
 
     #[test]
@@ -691,26 +758,32 @@ mod test {
         z80.registers.set_reg8(&Reg8::B, 0b1000_0000);
         z80.exec(Op::RL(Location8::Reg(Reg8::B)));
         assert_bin!(0b0000_0000, z80.registers.get_reg8(&Reg8::B));
-        assert!(!z80.registers.get_flag(&StatusFlag::Sign));
-        assert!(z80.registers.get_flag(&StatusFlag::Zero));
-        assert!(!z80.registers.get_flag(&StatusFlag::HalfCarry));
-        assert!(z80.registers.get_flag(&StatusFlag::ParityOverflow));
-        assert!(!z80.registers.get_flag(&StatusFlag::AddSubtract));
-        assert!(z80.registers.get_flag(&StatusFlag::Carry));
+        assert_flags!(
+            z80.registers,
+            Sign = false,
+            Zero = true,
+            HalfCarry = false,
+            ParityOverflow = true,
+            AddSubtract = false,
+            Carry = true,
+        );
     }
 
-#[test]
+    #[test]
     fn rrc_op() {
         let mut z80 = Z80::default();
         z80.registers.set_reg8(&Reg8::B, 0b1000_1011);
         z80.exec(Op::RRC(Location8::Reg(Reg8::B)));
         assert_bin!(0b1100_0101, z80.registers.get_reg8(&Reg8::B));
-        assert!(z80.registers.get_flag(&StatusFlag::Sign));
-        assert!(!z80.registers.get_flag(&StatusFlag::Zero));
-        assert!(!z80.registers.get_flag(&StatusFlag::HalfCarry));
-        assert!(z80.registers.get_flag(&StatusFlag::ParityOverflow));
-        assert!(!z80.registers.get_flag(&StatusFlag::AddSubtract));
-        assert!(z80.registers.get_flag(&StatusFlag::Carry));
+        assert_flags!(
+            z80.registers,
+            Sign = true,
+            Zero = false,
+            HalfCarry = false,
+            ParityOverflow = true,
+            AddSubtract = false,
+            Carry = true,
+        );
     }
 
     #[test]
@@ -720,11 +793,15 @@ mod test {
         z80.registers.set_reg8(&Reg8::B, 0b1110_1110);
         z80.exec(Op::RR(Location8::Reg(Reg8::B)));
         assert_bin!(0b1111_0111, z80.registers.get_reg8(&Reg8::B));
-        assert!(z80.registers.get_flag(&StatusFlag::Sign));
-        assert!(!z80.registers.get_flag(&StatusFlag::Zero));
-        assert!(!z80.registers.get_flag(&StatusFlag::HalfCarry));
-        assert!(!z80.registers.get_flag(&StatusFlag::ParityOverflow));
-        assert!(!z80.registers.get_flag(&StatusFlag::AddSubtract));
-        assert!(!z80.registers.get_flag(&StatusFlag::Carry));
+
+        assert_flags!(
+            z80.registers,
+            Sign = true,
+            Zero = false,
+            HalfCarry = false,
+            ParityOverflow = false,
+            AddSubtract = false,
+            Carry = false,
+        );
     }
 }
