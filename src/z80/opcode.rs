@@ -29,6 +29,41 @@ pub fn opcode(code: [u8; 4]) -> (Op, u8) {
         [op, _, _, _] if op & 0b1100_0000 == 0b0100_0000 => {
             (Op::LD8(reg_bits(op >> 3), reg_bits(op)), 1)
         }
+        [op, i, _, _] if op & 0b1100_0111 == 0b0000_0110 => {
+            (Op::LD8(reg_bits(op >> 3), Location8::Immediate(i)), 2)
+        }
+
+        // Indirect Loads
+        [0x0A, _, _, _] => (
+            Op::LD8(Location8::Reg(Reg8::A), Location8::RegIndirect(Reg16::BC)),
+            1,
+        ),
+        [0x1A, _, _, _] => (
+            Op::LD8(Location8::Reg(Reg8::A), Location8::RegIndirect(Reg16::DE)),
+            1,
+        ),
+        [0x3A, n1, n2, _] => {
+            let addr = u16::from(n1) | (u16::from(n2) << 8);
+            (
+                Op::LD8(Location8::Reg(Reg8::A), Location8::ImmediateIndirect(addr)),
+                3,
+            )
+        }
+        [0x02, _, _, _] => (
+            Op::LD8(Location8::RegIndirect(Reg16::BC), Location8::Reg(Reg8::A)),
+            1,
+        ),
+        [0x12, _, _, _] => (
+            Op::LD8(Location8::RegIndirect(Reg16::DE), Location8::Reg(Reg8::A)),
+            1,
+        ),
+        [0x32, n1, n2, _] => {
+            let addr = u16::from(n1) | (u16::from(n2) << 8);
+            (
+                Op::LD8(Location8::ImmediateIndirect(addr), Location8::Reg(Reg8::A)),
+                3,
+            )
+        }
 
         [o1, o2, o3, o4] => panic!(
             "Unimplemented opcode [{:02x}, {:02x}, {:02x}, {:02x}]",
@@ -55,7 +90,7 @@ fn reg_bits(bits: u8) -> Location8 {
 mod test {
 
     #[allow(unused_imports)]
-    use crate::ops::{Location8::*, Op::*, Reg16::HL, Reg8::*};
+    use crate::ops::{Location8::*, Op::*, Reg16::*, Reg8::*};
 
     macro_rules! op4 {
         ($o1 : expr) => {
@@ -63,7 +98,10 @@ mod test {
         };
         ($o1 : expr, $o2 : expr) => {
             [$o1, $o2, 0x00, 0x00]
-        }; // TODO 3 and 4
+        };
+        ($o1 : expr, $o2 : expr, $o3 : expr) => {
+            [$o1, $o2, $o3, 0x00]
+        };
     }
 
     macro_rules! assert_opcode {
@@ -76,6 +114,19 @@ mod test {
             let (opc, bytes) = $crate::z80::opcode::opcode(op4!($o1, $o2));
             assert_eq!($bytes, bytes, "Opcode {:?} ({:02x} {:02x})", $opc, $o1, $o2);
             assert_eq!($opc, opc, "Opcode {:?} ({:02x} {:02x})", $opc, $o1, $o2);
+        };
+        ($opc : expr, $bytes : expr, $o1 : expr, $o2 : expr, $o3 : expr) => {
+            let (opc, bytes) = $crate::z80::opcode::opcode(op4!($o1, $o2, $o3));
+            assert_eq!(
+                $bytes, bytes,
+                "Opcode {:?} ({:02x} {:02x} {:02x})",
+                $opc, $o1, $o2, $o3
+            );
+            assert_eq!(
+                $opc, opc,
+                "Opcode {:?} ({:02x} {:02x} {:02x})",
+                $opc, $o1, $o2, $o3
+            );
         };
     }
 
@@ -125,7 +176,7 @@ mod test {
     }
 
     #[test]
-     fn adc() {
+    fn adc() {
         assert_opcode!(ADC(Reg(A), Reg(A)), 1, 0x8F);
         assert_opcode!(ADC(Reg(A), Reg(B)), 1, 0x88);
         assert_opcode!(ADC(Reg(A), Reg(C)), 1, 0x89);
@@ -150,12 +201,10 @@ mod test {
 
         assert_opcode!(SUB8(Reg(A), RegIndirect(HL)), 1, 0x96);
         assert_opcode!(SUB8(Reg(A), Immediate(0x75)), 2, 0xD6, 0x75);
-
     }
 
     #[test]
     fn sbc() {
-
         assert_opcode!(SBC(Reg(A), Reg(A)), 1, 0x9F);
         assert_opcode!(SBC(Reg(A), Reg(B)), 1, 0x98);
         assert_opcode!(SBC(Reg(A), Reg(C)), 1, 0x99);
@@ -242,5 +291,29 @@ mod test {
         assert_opcode!(LD8(RegIndirect(HL), Reg(H)), 1, 0x74);
         assert_opcode!(LD8(RegIndirect(HL), Reg(L)), 1, 0x75);
         // ld (hl), (hl) is HALT
+    }
+
+    #[test]
+    fn ld_immediate() {
+        assert_opcode!(LD8(Reg(A), Immediate(0x25)), 2, 0x3E, 0x25);
+        assert_opcode!(LD8(Reg(B), Immediate(0x99)), 2, 0x06, 0x99);
+        assert_opcode!(LD8(Reg(C), Immediate(0xAA)), 2, 0x0E, 0xAA);
+        assert_opcode!(LD8(Reg(D), Immediate(0xCD)), 2, 0x16, 0xCD);
+        assert_opcode!(LD8(Reg(E), Immediate(0xDA)), 2, 0x1E, 0xDA);
+        assert_opcode!(LD8(Reg(H), Immediate(0xFA)), 2, 0x26, 0xFA);
+        assert_opcode!(LD8(Reg(L), Immediate(0xCA)), 2, 0x2E, 0xCA);
+        assert_opcode!(LD8(RegIndirect(HL), Immediate(0xC7)), 2, 0x36, 0xC7);
+    }
+
+    #[test]
+    fn ld_indirect() {
+        // HL is in ld_rr above, because "register" 110 is (HL)
+        assert_opcode!(LD8(Reg(A), RegIndirect(BC)), 1, 0x0A);
+        assert_opcode!(LD8(Reg(A), RegIndirect(DE)), 1, 0x1A);
+        assert_opcode!(LD8(Reg(A), ImmediateIndirect(0x0F32)), 3, 0x3A, 0x32, 0x0F);
+
+        assert_opcode!(LD8(RegIndirect(BC), Reg(A)), 1, 0x02);
+        assert_opcode!(LD8(RegIndirect(DE), Reg(A)), 1, 0x12);
+        assert_opcode!(LD8(ImmediateIndirect(0x01AA), Reg(A)), 3, 0x32, 0xAA, 0x01);
     }
 }
