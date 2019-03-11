@@ -1,3 +1,4 @@
+#[derive(Debug, PartialEq)]
 pub enum Op {
     ADC(Location8, Location8),  // Add including carry
     ADD8(Location8, Location8), // Add
@@ -83,6 +84,7 @@ pub enum Op {
     // SRL,
 }
 
+#[derive(Debug, PartialEq, Clone, Copy)]
 pub enum Reg8 {
     A,
     F,
@@ -102,6 +104,7 @@ pub enum Reg8 {
     LP,
 }
 
+#[derive(Debug, PartialEq)]
 pub enum Reg16 {
     AF,
     BC,
@@ -113,18 +116,21 @@ pub enum Reg16 {
     HLP,
 }
 
+#[derive(Debug, PartialEq)]
 pub enum Location8 {
     Reg(Reg8),
     RegIndirect(Reg16),
     Immediate(u8), // Indexed()
 }
 
+#[derive(Debug, PartialEq)]
 pub enum Location16 {
     Reg(Reg16),
     RegIndirect(Reg16),
     Immediate(u16),
 }
 
+#[derive(Debug, PartialEq)]
 pub enum StatusFlag {
     Carry,
     AddSubtract,

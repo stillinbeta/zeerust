@@ -3,6 +3,7 @@ use std::collections::HashMap;
 use crate::cpu;
 use crate::ops;
 
+pub mod opcode;
 pub mod io;
 #[cfg(test)]
 mod tests;
