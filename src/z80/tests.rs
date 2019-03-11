@@ -8,10 +8,12 @@ fn get_loc8() {
     z80.registers.set_reg8(Reg8::H, 0xAA);
     z80.registers.set_reg8(Reg8::L, 0x0F);
     z80.memory.memory[0x0FAA] = 0xD1;
+    z80.memory.memory[0x0DCC] = 0x75;
 
     assert_hex!(0xC5, z80.get_loc8(&Location8::Reg(Reg8::A)));
     assert_hex!(0xD1, z80.get_loc8(&Location8::RegIndirect(Reg16::HL)));
     assert_hex!(0xCC, z80.get_loc8(&Location8::Immediate(0xCC)));
+    assert_hex!(0x75, z80.get_loc8(&Location8::ImmediateIndirect(0x0DCC)));
 }
 
 #[test]
@@ -31,7 +33,7 @@ fn set_loc8_immediate_panic() {
 }
 
 #[test]
-fn set_loc8_register() {
+fn set_loc8() {
     let mut z80 = Z80::default();
     z80.set_loc8(&Location8::Reg(Reg8::A), 0xDD);
     assert_hex!(0xDD, z80.registers.get_reg8(Reg8::A));
@@ -41,6 +43,9 @@ fn set_loc8_register() {
 
     z80.set_loc8(&Location8::RegIndirect(Reg16::HL), 0xEE);
     assert_hex!(0xEE, z80.memory.memory[0x0A11]);
+
+    z80.set_loc8(&Location8::ImmediateIndirect(0x0C22), 0xF5);
+    assert_hex!(0xF5, z80.memory.memory[0x0C22]);
 }
 
 #[test]
@@ -307,7 +312,6 @@ fn neg_op_sign_negative() {
         AddSubtract = true,
         Carry = true,
     );
-
 }
 #[test]
 fn neg_0x80() {

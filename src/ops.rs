@@ -120,7 +120,8 @@ pub enum Reg16 {
 pub enum Location8 {
     Reg(Reg8),
     RegIndirect(Reg16),
-    Immediate(u8), // Indexed()
+    ImmediateIndirect(u16),
+    Immediate(u8),
 }
 
 #[derive(Debug, PartialEq)]

@@ -3,8 +3,8 @@ use std::collections::HashMap;
 use crate::cpu;
 use crate::ops;
 
-pub mod opcode;
 pub mod io;
+pub mod opcode;
 #[cfg(test)]
 mod tests;
 
@@ -399,6 +399,7 @@ impl<'a> Z80<'a> {
                 let addr = self.registers.get_reg16(&reg);
                 self.memory.memory[addr as usize]
             }
+            ops::Location8::ImmediateIndirect(addr) => self.memory.memory[*addr as usize],
         }
     }
 
@@ -406,6 +407,9 @@ impl<'a> Z80<'a> {
         match loc {
             ops::Location8::Immediate(_) => panic!("Attempting to set immediate value!"),
             ops::Location8::Reg(reg) => self.registers.set_reg8(*reg, val),
+            ops::Location8::ImmediateIndirect(addr) => {
+                self.memory.memory[*addr as usize] = val;
+            }
             ops::Location8::RegIndirect(reg) => {
                 let addr = self.registers.get_reg16(reg);
                 self.memory.memory[addr as usize] = val;
