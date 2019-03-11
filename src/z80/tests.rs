@@ -4,9 +4,9 @@ use crate::ops::{Location8, Op, Reg16, Reg8, StatusFlag};
 #[test]
 fn get_loc8() {
     let mut z80 = Z80::default();
-    z80.registers.set_reg8(&Reg8::A, 0xC5);
-    z80.registers.set_reg8(&Reg8::H, 0xAA);
-    z80.registers.set_reg8(&Reg8::L, 0x0F);
+    z80.registers.set_reg8(Reg8::A, 0xC5);
+    z80.registers.set_reg8(Reg8::H, 0xAA);
+    z80.registers.set_reg8(Reg8::L, 0x0F);
     z80.memory.memory[0x0FAA] = 0xD1;
 
     assert_hex!(0xC5, z80.get_loc8(&Location8::Reg(Reg8::A)));
@@ -18,8 +18,8 @@ fn get_loc8() {
 #[should_panic]
 fn get_loc8_segfault() {
     let mut z80 = Z80::default();
-    z80.registers.set_reg8(&Reg8::H, 0xFF);
-    z80.registers.set_reg8(&Reg8::L, 0xFF);
+    z80.registers.set_reg8(Reg8::H, 0xFF);
+    z80.registers.set_reg8(Reg8::L, 0xFF);
     z80.get_loc8(&Location8::RegIndirect(Reg16::HL));
 }
 
@@ -34,10 +34,10 @@ fn set_loc8_immediate_panic() {
 fn set_loc8_register() {
     let mut z80 = Z80::default();
     z80.set_loc8(&Location8::Reg(Reg8::A), 0xDD);
-    assert_hex!(0xDD, z80.registers.get_reg8(&Reg8::A));
+    assert_hex!(0xDD, z80.registers.get_reg8(Reg8::A));
 
-    z80.registers.set_reg8(&Reg8::H, 0x11);
-    z80.registers.set_reg8(&Reg8::L, 0x0A);
+    z80.registers.set_reg8(Reg8::H, 0x11);
+    z80.registers.set_reg8(Reg8::L, 0x0A);
 
     z80.set_loc8(&Location8::RegIndirect(Reg16::HL), 0xEE);
     assert_hex!(0xEE, z80.memory.memory[0x0A11]);
@@ -47,18 +47,18 @@ fn set_loc8_register() {
 fn ld8_op() {
     let mut z80 = Z80::default();
     z80.exec(Op::LD8(Location8::Reg(Reg8::A), Location8::Immediate(0xF5)));
-    assert_hex!(0xF5, z80.registers.get_reg8(&Reg8::A))
+    assert_hex!(0xF5, z80.registers.get_reg8(Reg8::A))
 }
 
 #[test]
 fn add8_op() {
     let mut z80 = Z80::default();
-    z80.registers.set_reg8(&Reg8::A, 0x64);
+    z80.registers.set_reg8(Reg8::A, 0x64);
     z80.exec(Op::ADD8(
         Location8::Reg(Reg8::A),
         Location8::Immediate(0x44),
     ));
-    assert_hex!(0xA8, z80.registers.get_reg8(&Reg8::A));
+    assert_hex!(0xA8, z80.registers.get_reg8(Reg8::A));
     assert_flags!(
         z80.registers,
         Sign = true,
@@ -69,12 +69,12 @@ fn add8_op() {
         Carry = true,
     );
 
-    z80.registers.set_reg8(&Reg8::A, 0xFF);
+    z80.registers.set_reg8(Reg8::A, 0xFF);
     z80.exec(Op::ADD8(
         Location8::Reg(Reg8::A),
         Location8::Immediate(0x01),
     ));
-    assert_hex!(0x00, z80.registers.get_reg8(&Reg8::A));
+    assert_hex!(0x00, z80.registers.get_reg8(Reg8::A));
     assert_flags!(
         z80.registers,
         Sign = false,
@@ -89,8 +89,8 @@ fn add8_op() {
 #[test]
 fn inc_op() {
     let mut z80 = Z80::default();
-    z80.registers.set_reg8(&Reg8::H, 0xCC);
-    z80.registers.set_reg8(&Reg8::L, 0x20);
+    z80.registers.set_reg8(Reg8::H, 0xCC);
+    z80.registers.set_reg8(Reg8::L, 0x20);
     z80.memory.memory[0x20CC] = 0xFF;
 
     z80.exec(Op::INC(Location8::RegIndirect(Reg16::HL)));
@@ -110,10 +110,10 @@ fn inc_op() {
 #[test]
 fn adc8_op() {
     let mut z80 = Z80::default();
-    z80.registers.set_reg8(&Reg8::A, 0x64);
+    z80.registers.set_reg8(Reg8::A, 0x64);
     z80.registers.set_flag(&StatusFlag::Carry, true);
     z80.exec(Op::ADC(Location8::Reg(Reg8::A), Location8::Immediate(0x44)));
-    assert_hex!(0xA9, z80.registers.get_reg8(&Reg8::A));
+    assert_hex!(0xA9, z80.registers.get_reg8(Reg8::A));
     assert_flags!(
         z80.registers,
         Sign = true,
@@ -128,12 +128,12 @@ fn adc8_op() {
 #[test]
 fn sub8_op() {
     let mut z80 = Z80::default();
-    z80.registers.set_reg8(&Reg8::A, 0b1010_0000);
+    z80.registers.set_reg8(Reg8::A, 0b1010_0000);
     z80.exec(Op::SUB8(
         Location8::Reg(Reg8::A),
         Location8::Immediate(0b0100_0100),
     ));
-    assert_bin!(0b0101_1100, z80.registers.get_reg8(&Reg8::A));
+    assert_bin!(0b0101_1100, z80.registers.get_reg8(Reg8::A));
     assert_flags!(
         z80.registers,
         Sign = false,
@@ -148,9 +148,9 @@ fn sub8_op() {
 #[test]
 fn cp_op() {
     let mut z80 = Z80::default();
-    z80.registers.set_reg8(&Reg8::A, 0b1010_0000);
+    z80.registers.set_reg8(Reg8::A, 0b1010_0000);
     z80.exec(Op::CP(Location8::Immediate(0b0100_0100)));
-    assert_bin!(0b1010_0000, z80.registers.get_reg8(&Reg8::A));
+    assert_bin!(0b1010_0000, z80.registers.get_reg8(Reg8::A));
     assert_flags!(
         z80.registers,
         Sign = false,
@@ -166,9 +166,9 @@ fn cp_op() {
 fn sbc8_op() {
     let mut z80 = Z80::default();
     z80.registers.set_flag(&StatusFlag::Carry, true);
-    z80.registers.set_reg8(&Reg8::A, 1);
+    z80.registers.set_reg8(Reg8::A, 1);
     z80.exec(Op::SBC(Location8::Reg(Reg8::A), Location8::Immediate(0)));
-    assert_bin!(0, z80.registers.get_reg8(&Reg8::A));
+    assert_bin!(0, z80.registers.get_reg8(Reg8::A));
     assert_flags!(
         z80.registers,
         Sign = false,
@@ -183,9 +183,9 @@ fn sbc8_op() {
 #[test]
 fn dec_op() {
     let mut z80 = Z80::default();
-    z80.registers.set_reg8(&Reg8::A, 0b1010_0000);
+    z80.registers.set_reg8(Reg8::A, 0b1010_0000);
     z80.exec(Op::DEC(Location8::Reg(Reg8::A)));
-    assert_bin!(0b1001_1111, z80.registers.get_reg8(&Reg8::A));
+    assert_bin!(0b1001_1111, z80.registers.get_reg8(Reg8::A));
     assert_flags!(
         z80.registers,
         Sign = true,
@@ -200,12 +200,12 @@ fn dec_op() {
 #[test]
 fn and_op() {
     let mut z80 = Z80::default();
-    z80.registers.set_reg8(&Reg8::A, 0b1001_1000);
+    z80.registers.set_reg8(Reg8::A, 0b1001_1000);
     z80.exec(Op::AND(
         Location8::Reg(Reg8::A),
         Location8::Immediate(0b0000_0000),
     ));
-    assert_bin!(0b0000_0000, z80.registers.get_reg8(&Reg8::A));
+    assert_bin!(0b0000_0000, z80.registers.get_reg8(Reg8::A));
     assert_flags!(
         z80.registers,
         Sign = false,
@@ -220,12 +220,12 @@ fn and_op() {
 #[test]
 fn or_op() {
     let mut z80 = Z80::default();
-    z80.registers.set_reg8(&Reg8::A, 0b1001_1000);
+    z80.registers.set_reg8(Reg8::A, 0b1001_1000);
     z80.exec(Op::OR(
         Location8::Reg(Reg8::A),
         Location8::Immediate(0b0001_1011),
     ));
-    assert_bin!(0b1001_1011, z80.registers.get_reg8(&Reg8::A));
+    assert_bin!(0b1001_1011, z80.registers.get_reg8(Reg8::A));
     assert_flags!(
         z80.registers,
         Sign = true,
@@ -240,12 +240,12 @@ fn or_op() {
 #[test]
 fn xor_op() {
     let mut z80 = Z80::default();
-    z80.registers.set_reg8(&Reg8::A, 0b0011_1100);
+    z80.registers.set_reg8(Reg8::A, 0b0011_1100);
     z80.exec(Op::XOR(
         Location8::Reg(Reg8::A),
         Location8::Immediate(0b0001_1011),
     ));
-    assert_bin!(0b0010_0111, z80.registers.get_reg8(&Reg8::A));
+    assert_bin!(0b0010_0111, z80.registers.get_reg8(Reg8::A));
     assert_flags!(
         z80.registers,
         Sign = false,
@@ -267,19 +267,19 @@ fn daa_op() {
 #[test]
 fn cpl_op() {
     let mut z80 = Z80::default();
-    z80.registers.set_reg8(&Reg8::A, 0b1011_1101);
+    z80.registers.set_reg8(Reg8::A, 0b1011_1101);
     z80.exec(Op::CPL);
-    assert_bin!(0b0100_0010, z80.registers.get_reg8(&Reg8::A));
+    assert_bin!(0b0100_0010, z80.registers.get_reg8(Reg8::A));
     assert_flags!(z80.registers, HalfCarry = true, AddSubtract = true,);
 }
 
 #[test]
-fn neg_op() {
+fn neg_op_default() {
     let mut z80 = Z80::default();
     // Sign is positive
-    z80.registers.set_reg8(&Reg8::A, 0b1001_1000);
+    z80.registers.set_reg8(Reg8::A, 0b1001_1000);
     z80.exec(Op::NEG);
-    assert_bin!(0b0110_1000, z80.registers.get_reg8(&Reg8::A));
+    assert_bin!(0b0110_1000, z80.registers.get_reg8(Reg8::A));
     assert_flags!(
         z80.registers,
         Sign = false,
@@ -289,11 +289,15 @@ fn neg_op() {
         AddSubtract = true,
         Carry = true,
     );
+}
 
+#[test]
+fn neg_op_sign_negative() {
+    let mut z80 = Z80::default();
     // Sign is negative
-    z80.registers.set_reg8(&Reg8::A, 0b0001_1000);
+    z80.registers.set_reg8(Reg8::A, 0b0001_1000);
     z80.exec(Op::NEG);
-    assert_bin!(0b1110_1000, z80.registers.get_reg8(&Reg8::A));
+    assert_bin!(0b1110_1000, z80.registers.get_reg8(Reg8::A));
     assert_flags!(
         z80.registers,
         Sign = true,
@@ -304,11 +308,14 @@ fn neg_op() {
         Carry = true,
     );
 
-    // A was 0x80
-    z80.registers.set_reg8(&Reg8::A, 0x80);
+}
+#[test]
+fn neg_0x80() {
+    let mut z80 = Z80::default();
+    z80.registers.set_reg8(Reg8::A, 0x80);
     z80.exec(Op::NEG);
     // TODO: not 100% on 2's compliment of 0x80
-    assert_bin!(0b1000_0000, z80.registers.get_reg8(&Reg8::A));
+    assert_bin!(0b1000_0000, z80.registers.get_reg8(Reg8::A));
     assert_flags!(
         z80.registers,
         Sign = true,
@@ -318,11 +325,15 @@ fn neg_op() {
         AddSubtract = true,
         Carry = true,
     );
+}
 
+#[test]
+fn neg_zero() {
+    let mut z80 = Z80::default();
     // A was 0x00
-    z80.registers.set_reg8(&Reg8::A, 0b0000_0000);
+    z80.registers.set_reg8(Reg8::A, 0b0000_0000);
     z80.exec(Op::NEG);
-    assert_bin!(0b0000_0000, z80.registers.get_reg8(&Reg8::A));
+    assert_bin!(0b0000_0000, z80.registers.get_reg8(Reg8::A));
     assert_flags!(
         z80.registers,
         Sign = false,
@@ -363,9 +374,9 @@ fn scf_op() {
 #[test]
 fn rlca_op() {
     let mut z80 = Z80::default();
-    z80.registers.set_reg8(&Reg8::A, 0b0101_1011);
+    z80.registers.set_reg8(Reg8::A, 0b0101_1011);
     z80.exec(Op::RLCA);
-    assert_bin!(0b1011_0110, z80.registers.get_reg8(&Reg8::A));
+    assert_bin!(0b1011_0110, z80.registers.get_reg8(Reg8::A));
     assert_flags!(
         z80.registers,
         HalfCarry = false,
@@ -378,9 +389,9 @@ fn rlca_op() {
 fn rla_op() {
     let mut z80 = Z80::default();
     z80.registers.set_flag(&StatusFlag::Carry, true);
-    z80.registers.set_reg8(&Reg8::A, 0b1001_1011);
+    z80.registers.set_reg8(Reg8::A, 0b1001_1011);
     z80.exec(Op::RLA);
-    assert_bin!(0b0011_0111, z80.registers.get_reg8(&Reg8::A));
+    assert_bin!(0b0011_0111, z80.registers.get_reg8(Reg8::A));
     assert_flags!(
         z80.registers,
         HalfCarry = false,
@@ -389,9 +400,9 @@ fn rla_op() {
     );
 
     z80.registers.set_flag(&StatusFlag::Carry, false);
-    z80.registers.set_reg8(&Reg8::A, 0b0001_1001);
+    z80.registers.set_reg8(Reg8::A, 0b0001_1001);
     z80.exec(Op::RLA);
-    assert_bin!(0b0011_0010, z80.registers.get_reg8(&Reg8::A));
+    assert_bin!(0b0011_0010, z80.registers.get_reg8(Reg8::A));
     assert_flags!(
         z80.registers,
         HalfCarry = false,
@@ -403,9 +414,9 @@ fn rla_op() {
 #[test]
 fn rrca_op() {
     let mut z80 = Z80::default();
-    z80.registers.set_reg8(&Reg8::A, 0b0110_1001);
+    z80.registers.set_reg8(Reg8::A, 0b0110_1001);
     z80.exec(Op::RRCA);
-    assert_bin!(0b1011_0100, z80.registers.get_reg8(&Reg8::A));
+    assert_bin!(0b1011_0100, z80.registers.get_reg8(Reg8::A));
     assert_flags!(
         z80.registers,
         HalfCarry = false,
@@ -418,9 +429,9 @@ fn rrca_op() {
 fn rra_op() {
     let mut z80 = Z80::default();
     z80.registers.set_flag(&StatusFlag::Carry, true);
-    z80.registers.set_reg8(&Reg8::A, 0b0101_1100);
+    z80.registers.set_reg8(Reg8::A, 0b0101_1100);
     z80.exec(Op::RRA);
-    assert_bin!(0b1010_1110, z80.registers.get_reg8(&Reg8::A));
+    assert_bin!(0b1010_1110, z80.registers.get_reg8(Reg8::A));
     assert_flags!(
         z80.registers,
         HalfCarry = false,
@@ -429,9 +440,9 @@ fn rra_op() {
     );
 
     z80.registers.set_flag(&StatusFlag::Carry, false);
-    z80.registers.set_reg8(&Reg8::A, 0b1010_1011);
+    z80.registers.set_reg8(Reg8::A, 0b1010_1011);
     z80.exec(Op::RRA);
-    assert_bin!(0b0101_0101, z80.registers.get_reg8(&Reg8::A));
+    assert_bin!(0b0101_0101, z80.registers.get_reg8(Reg8::A));
 
     assert_flags!(
         z80.registers,
@@ -445,9 +456,9 @@ fn rra_op() {
 fn rlc_op() {
     let mut z80 = Z80::default();
     z80.registers.set_flag(&StatusFlag::Carry, true);
-    z80.registers.set_reg8(&Reg8::B, 0b1111_0000);
+    z80.registers.set_reg8(Reg8::B, 0b1111_0000);
     z80.exec(Op::RLC(Location8::Reg(Reg8::B)));
-    assert_bin!(0b1110_0001, z80.registers.get_reg8(&Reg8::B));
+    assert_bin!(0b1110_0001, z80.registers.get_reg8(Reg8::B));
 
     assert_flags!(
         z80.registers,
@@ -464,9 +475,9 @@ fn rlc_op() {
 fn rl_op() {
     let mut z80 = Z80::default();
     z80.registers.set_flag(&StatusFlag::Carry, false);
-    z80.registers.set_reg8(&Reg8::B, 0b1000_0000);
+    z80.registers.set_reg8(Reg8::B, 0b1000_0000);
     z80.exec(Op::RL(Location8::Reg(Reg8::B)));
-    assert_bin!(0b0000_0000, z80.registers.get_reg8(&Reg8::B));
+    assert_bin!(0b0000_0000, z80.registers.get_reg8(Reg8::B));
     assert_flags!(
         z80.registers,
         Sign = false,
@@ -481,9 +492,9 @@ fn rl_op() {
 #[test]
 fn rrc_op() {
     let mut z80 = Z80::default();
-    z80.registers.set_reg8(&Reg8::B, 0b1000_1011);
+    z80.registers.set_reg8(Reg8::B, 0b1000_1011);
     z80.exec(Op::RRC(Location8::Reg(Reg8::B)));
-    assert_bin!(0b1100_0101, z80.registers.get_reg8(&Reg8::B));
+    assert_bin!(0b1100_0101, z80.registers.get_reg8(Reg8::B));
     assert_flags!(
         z80.registers,
         Sign = true,
@@ -499,9 +510,9 @@ fn rrc_op() {
 fn rr_op() {
     let mut z80 = Z80::default();
     z80.registers.set_flag(&StatusFlag::Carry, true);
-    z80.registers.set_reg8(&Reg8::B, 0b1110_1110);
+    z80.registers.set_reg8(Reg8::B, 0b1110_1110);
     z80.exec(Op::RR(Location8::Reg(Reg8::B)));
-    assert_bin!(0b1111_0111, z80.registers.get_reg8(&Reg8::B));
+    assert_bin!(0b1111_0111, z80.registers.get_reg8(Reg8::B));
 
     assert_flags!(
         z80.registers,
@@ -517,9 +528,9 @@ fn rr_op() {
 #[test]
 fn srl_op() {
     let mut z80 = Z80::default();
-    z80.registers.set_reg8(&Reg8::C, 0b0110_0001);
+    z80.registers.set_reg8(Reg8::C, 0b0110_0001);
     z80.exec(Op::SRL(Location8::Reg(Reg8::C)));
-    assert_bin!(0b0011_0000, z80.registers.get_reg8(&Reg8::C));
+    assert_bin!(0b0011_0000, z80.registers.get_reg8(Reg8::C));
     assert_flags!(
         z80.registers,
         Sign = false,
@@ -534,9 +545,9 @@ fn srl_op() {
 #[test]
 fn sla_op() {
     let mut z80 = Z80::default();
-    z80.registers.set_reg8(&Reg8::D, 0b1000_0000);
+    z80.registers.set_reg8(Reg8::D, 0b1000_0000);
     z80.exec(Op::SLA(Location8::Reg(Reg8::D)));
-    assert_bin!(0b0000_0000, z80.registers.get_reg8(&Reg8::D));
+    assert_bin!(0b0000_0000, z80.registers.get_reg8(Reg8::D));
     assert_flags!(
         z80.registers,
         Sign = false,
@@ -551,9 +562,9 @@ fn sla_op() {
 #[test]
 fn sra_op() {
     let mut z80 = Z80::default();
-    z80.registers.set_reg8(&Reg8::C, 0b1100_1100);
+    z80.registers.set_reg8(Reg8::C, 0b1100_1100);
     z80.exec(Op::SRA(Location8::Reg(Reg8::C)));
-    assert_bin!(0b1110_0110, z80.registers.get_reg8(&Reg8::C));
+    assert_bin!(0b1110_0110, z80.registers.get_reg8(Reg8::C));
     assert_flags!(
         z80.registers,
         Sign = true,
@@ -568,14 +579,14 @@ fn sra_op() {
 #[test]
 fn rld_op() {
     let mut z80 = Z80::default();
-    z80.registers.set_reg8(&Reg8::H, 0xCC);
-    z80.registers.set_reg8(&Reg8::L, 0x20);
-    z80.registers.set_reg8(&Reg8::A, 0b0111_1010);
+    z80.registers.set_reg8(Reg8::H, 0xCC);
+    z80.registers.set_reg8(Reg8::L, 0x20);
+    z80.registers.set_reg8(Reg8::A, 0b0111_1010);
     z80.memory.memory[0x20CC] = 0b0011_0001;
 
     z80.exec(Op::RLD);
 
-    assert_bin!(0b0111_0011, z80.registers.get_reg8(&Reg8::A));
+    assert_bin!(0b0111_0011, z80.registers.get_reg8(Reg8::A));
     assert_bin!(0b0001_1010, z80.memory.memory[0x20CC]);
     assert_flags!(
         z80.registers,
@@ -587,14 +598,14 @@ fn rld_op() {
     );
 
     // Zero accumulator
-    z80.registers.set_reg8(&Reg8::H, 0xCC);
-    z80.registers.set_reg8(&Reg8::L, 0x20);
-    z80.registers.set_reg8(&Reg8::A, 0b0000_1010);
+    z80.registers.set_reg8(Reg8::H, 0xCC);
+    z80.registers.set_reg8(Reg8::L, 0x20);
+    z80.registers.set_reg8(Reg8::A, 0b0000_1010);
     z80.memory.memory[0x20CC] = 0b0000_1110;
 
     z80.exec(Op::RLD);
 
-    assert_bin!(0b0000_0000, z80.registers.get_reg8(&Reg8::A));
+    assert_bin!(0b0000_0000, z80.registers.get_reg8(Reg8::A));
     assert_bin!(0b1110_1010, z80.memory.memory[0x20CC]);
     assert_flags!(
         z80.registers,
@@ -609,14 +620,14 @@ fn rld_op() {
 #[test]
 fn rrd_op() {
     let mut z80 = Z80::default();
-    z80.registers.set_reg8(&Reg8::H, 0xCC);
-    z80.registers.set_reg8(&Reg8::L, 0x20);
-    z80.registers.set_reg8(&Reg8::A, 0b1000_0100);
+    z80.registers.set_reg8(Reg8::H, 0xCC);
+    z80.registers.set_reg8(Reg8::L, 0x20);
+    z80.registers.set_reg8(Reg8::A, 0b1000_0100);
     z80.memory.memory[0x20CC] = 0b0010_0000;
 
     z80.exec(Op::RRD);
 
-    assert_bin!(0b1000_0000, z80.registers.get_reg8(&Reg8::A));
+    assert_bin!(0b1000_0000, z80.registers.get_reg8(Reg8::A));
     assert_bin!(0b0100_0010, z80.memory.memory[0x20CC]);
     assert_flags!(
         z80.registers,
@@ -631,7 +642,7 @@ fn rrd_op() {
 #[test]
 fn bit_op() {
     let mut z80 = Z80::default();
-    z80.registers.set_reg8(&Reg8::A, 0b1100_0001);
+    z80.registers.set_reg8(Reg8::A, 0b1100_0001);
 
     let expected = [false, true, true, true, true, true, false, false];
     for (i, expect) in expected.iter().enumerate() {
@@ -655,16 +666,16 @@ fn bit_op_too_big() {
 #[test]
 fn set_op() {
     let mut z80 = Z80::default();
-    z80.registers.set_reg8(&Reg8::E, 0b1011_0110);
+    z80.registers.set_reg8(Reg8::E, 0b1011_0110);
 
     z80.exec(Op::SET(0, Location8::Reg(Reg8::E)));
-    assert_bin!(0b1011_0111, z80.registers.get_reg8(&Reg8::E));
+    assert_bin!(0b1011_0111, z80.registers.get_reg8(Reg8::E));
     z80.exec(Op::SET(3, Location8::Reg(Reg8::E)));
-    assert_bin!(0b1011_1111, z80.registers.get_reg8(&Reg8::E));
+    assert_bin!(0b1011_1111, z80.registers.get_reg8(Reg8::E));
     z80.exec(Op::SET(6, Location8::Reg(Reg8::E)));
-    assert_bin!(0b1111_1111, z80.registers.get_reg8(&Reg8::E));
+    assert_bin!(0b1111_1111, z80.registers.get_reg8(Reg8::E));
     z80.exec(Op::SET(7, Location8::Reg(Reg8::E)));
-    assert_bin!(0b1111_1111, z80.registers.get_reg8(&Reg8::E));
+    assert_bin!(0b1111_1111, z80.registers.get_reg8(Reg8::E));
 }
 
 #[test]
@@ -677,19 +688,19 @@ fn set_op_too_big() {
 #[test]
 fn res_op() {
     let mut z80 = Z80::default();
-    z80.registers.set_reg8(&Reg8::D, 0b1101_1001);
+    z80.registers.set_reg8(Reg8::D, 0b1101_1001);
     z80.exec(Op::RES(0, Location8::Reg(Reg8::D)));
-    assert_bin!(0b1101_1000, z80.registers.get_reg8(&Reg8::D));
+    assert_bin!(0b1101_1000, z80.registers.get_reg8(Reg8::D));
     z80.exec(Op::RES(3, Location8::Reg(Reg8::D)));
-    assert_bin!(0b1101_0000, z80.registers.get_reg8(&Reg8::D));
+    assert_bin!(0b1101_0000, z80.registers.get_reg8(Reg8::D));
     z80.exec(Op::RES(4, Location8::Reg(Reg8::D)));
-    assert_bin!(0b1100_0000, z80.registers.get_reg8(&Reg8::D));
+    assert_bin!(0b1100_0000, z80.registers.get_reg8(Reg8::D));
     z80.exec(Op::RES(5, Location8::Reg(Reg8::D)));
-    assert_bin!(0b1100_0000, z80.registers.get_reg8(&Reg8::D));
+    assert_bin!(0b1100_0000, z80.registers.get_reg8(Reg8::D));
     z80.exec(Op::RES(6, Location8::Reg(Reg8::D)));
-    assert_bin!(0b1000_0000, z80.registers.get_reg8(&Reg8::D));
+    assert_bin!(0b1000_0000, z80.registers.get_reg8(Reg8::D));
     z80.exec(Op::RES(7, Location8::Reg(Reg8::D)));
-    assert_bin!(0b0000_0000, z80.registers.get_reg8(&Reg8::D));
+    assert_bin!(0b0000_0000, z80.registers.get_reg8(Reg8::D));
 }
 
 #[test]
@@ -709,14 +720,14 @@ fn in_op() {
     z80.install_input(0x05, &buf2);
 
     z80.exec(Op::IN(Location8::Reg(Reg8::A), 0x00));
-    assert_hex!(0x33, z80.registers.get_reg8(&Reg8::A));
+    assert_hex!(0x33, z80.registers.get_reg8(Reg8::A));
     z80.exec(Op::IN(Location8::Reg(Reg8::A), 0x05));
-    assert_hex!(0xB7, z80.registers.get_reg8(&Reg8::A));
+    assert_hex!(0xB7, z80.registers.get_reg8(Reg8::A));
 
     z80.exec(Op::IN(Location8::Reg(Reg8::A), 0x00));
-    assert_hex!(0xF8, z80.registers.get_reg8(&Reg8::A));
+    assert_hex!(0xF8, z80.registers.get_reg8(Reg8::A));
     z80.exec(Op::IN(Location8::Reg(Reg8::A), 0x05));
-    assert_hex!(0xBB, z80.registers.get_reg8(&Reg8::A));
+    assert_hex!(0xBB, z80.registers.get_reg8(Reg8::A));
 }
 
 #[test]
@@ -735,14 +746,14 @@ fn out_op() {
     z80.install_output(0x00, &buf1);
     z80.install_output(0x05, &buf2);
 
-    z80.registers.set_reg8(&Reg8::A, 0xFD);
-    z80.registers.set_reg8(&Reg8::B, 0x69);
+    z80.registers.set_reg8(Reg8::A, 0xFD);
+    z80.registers.set_reg8(Reg8::B, 0x69);
 
     z80.exec(Op::OUT(Location8::Reg(Reg8::A), 0x05));
     z80.exec(Op::OUT(Location8::Reg(Reg8::B), 0x00));
 
-    z80.registers.set_reg8(&Reg8::A, 0x73);
-    z80.registers.set_reg8(&Reg8::B, 0x5C);
+    z80.registers.set_reg8(Reg8::A, 0x73);
+    z80.registers.set_reg8(Reg8::B, 0x5C);
 
     z80.exec(Op::OUT(Location8::Reg(Reg8::A), 0x00));
     z80.exec(Op::OUT(Location8::Reg(Reg8::B), 0x05));

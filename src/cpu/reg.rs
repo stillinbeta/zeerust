@@ -47,7 +47,7 @@ impl Registers {
         }
     }
 
-    pub fn get_reg8(&self, r: &Reg8) -> u8 {
+    pub fn get_reg8(&self, r: Reg8) -> u8 {
         match r {
             Reg8::A => self.a,
             Reg8::B => self.b,
@@ -69,7 +69,7 @@ impl Registers {
         }
     }
 
-    pub fn set_reg8(&mut self, r: &Reg8, v: u8) {
+    pub fn set_reg8(&mut self, r: Reg8, v: u8) {
         match r {
             Reg8::A => self.a = v,
             Reg8::B => self.b = v,
@@ -133,7 +133,7 @@ mod test {
     #[test]
     fn get_flag() {
         let mut regs = Registers {
-            f: 0b10101010,
+            f: 0b1010_1010,
             ..Default::default()
         };
 
@@ -144,7 +144,7 @@ mod test {
         assert!(!regs.get_flag(&StatusFlag::Zero));
         assert!(regs.get_flag(&StatusFlag::Sign));
 
-        regs.f = 0b01010101;
+        regs.f = 0b0101_0101;
 
         assert!(regs.get_flag(&StatusFlag::Carry));
         assert!(!regs.get_flag(&StatusFlag::AddSubtract));
@@ -172,41 +172,41 @@ mod test {
     #[test]
     fn get_set_reg8() {
         let mut regs = Registers::default();
-        regs.set_reg8(&Reg8::A, 0x1);
-        regs.set_reg8(&Reg8::B, 0x2);
-        regs.set_reg8(&Reg8::C, 0x3);
-        regs.set_reg8(&Reg8::D, 0x4);
-        regs.set_reg8(&Reg8::E, 0x5);
-        regs.set_reg8(&Reg8::F, 0x6);
-        regs.set_reg8(&Reg8::H, 0x7);
-        regs.set_reg8(&Reg8::L, 0x8);
+        regs.set_reg8(Reg8::A, 0x1);
+        regs.set_reg8(Reg8::B, 0x2);
+        regs.set_reg8(Reg8::C, 0x3);
+        regs.set_reg8(Reg8::D, 0x4);
+        regs.set_reg8(Reg8::E, 0x5);
+        regs.set_reg8(Reg8::F, 0x6);
+        regs.set_reg8(Reg8::H, 0x7);
+        regs.set_reg8(Reg8::L, 0x8);
 
-        regs.set_reg8(&Reg8::AP, 0x21);
-        regs.set_reg8(&Reg8::BP, 0x22);
-        regs.set_reg8(&Reg8::CP, 0x23);
-        regs.set_reg8(&Reg8::DP, 0x24);
-        regs.set_reg8(&Reg8::EP, 0x25);
-        regs.set_reg8(&Reg8::FP, 0x26);
-        regs.set_reg8(&Reg8::HP, 0x27);
-        regs.set_reg8(&Reg8::LP, 0x28);
+        regs.set_reg8(Reg8::AP, 0x21);
+        regs.set_reg8(Reg8::BP, 0x22);
+        regs.set_reg8(Reg8::CP, 0x23);
+        regs.set_reg8(Reg8::DP, 0x24);
+        regs.set_reg8(Reg8::EP, 0x25);
+        regs.set_reg8(Reg8::FP, 0x26);
+        regs.set_reg8(Reg8::HP, 0x27);
+        regs.set_reg8(Reg8::LP, 0x28);
 
-        assert_eq!(0x1, regs.get_reg8(&Reg8::A));
-        assert_eq!(0x2, regs.get_reg8(&Reg8::B));
-        assert_eq!(0x3, regs.get_reg8(&Reg8::C));
-        assert_eq!(0x4, regs.get_reg8(&Reg8::D));
-        assert_eq!(0x5, regs.get_reg8(&Reg8::E));
-        assert_eq!(0x6, regs.get_reg8(&Reg8::F));
-        assert_eq!(0x7, regs.get_reg8(&Reg8::H));
-        assert_eq!(0x8, regs.get_reg8(&Reg8::L));
+        assert_eq!(0x1, regs.get_reg8(Reg8::A));
+        assert_eq!(0x2, regs.get_reg8(Reg8::B));
+        assert_eq!(0x3, regs.get_reg8(Reg8::C));
+        assert_eq!(0x4, regs.get_reg8(Reg8::D));
+        assert_eq!(0x5, regs.get_reg8(Reg8::E));
+        assert_eq!(0x6, regs.get_reg8(Reg8::F));
+        assert_eq!(0x7, regs.get_reg8(Reg8::H));
+        assert_eq!(0x8, regs.get_reg8(Reg8::L));
 
-        assert_eq!(0x21, regs.get_reg8(&Reg8::AP));
-        assert_eq!(0x22, regs.get_reg8(&Reg8::BP));
-        assert_eq!(0x23, regs.get_reg8(&Reg8::CP));
-        assert_eq!(0x24, regs.get_reg8(&Reg8::DP));
-        assert_eq!(0x25, regs.get_reg8(&Reg8::EP));
-        assert_eq!(0x26, regs.get_reg8(&Reg8::FP));
-        assert_eq!(0x27, regs.get_reg8(&Reg8::HP));
-        assert_eq!(0x28, regs.get_reg8(&Reg8::LP));
+        assert_eq!(0x21, regs.get_reg8(Reg8::AP));
+        assert_eq!(0x22, regs.get_reg8(Reg8::BP));
+        assert_eq!(0x23, regs.get_reg8(Reg8::CP));
+        assert_eq!(0x24, regs.get_reg8(Reg8::DP));
+        assert_eq!(0x25, regs.get_reg8(Reg8::EP));
+        assert_eq!(0x26, regs.get_reg8(Reg8::FP));
+        assert_eq!(0x27, regs.get_reg8(Reg8::HP));
+        assert_eq!(0x28, regs.get_reg8(Reg8::LP));
     }
 
     #[test]

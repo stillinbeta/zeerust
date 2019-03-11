@@ -53,6 +53,7 @@ fn reg_bits(bits: u8) -> Location8 {
 
 #[cfg(test)]
 mod test {
+
     #[allow(unused_imports)]
     use crate::ops::{Location8::*, Op::*, Reg16::HL, Reg8::*};
 
@@ -121,7 +122,10 @@ mod test {
 
         assert_opcode!(ADD8(Reg(A), RegIndirect(HL)), 1, 0x86);
         assert_opcode!(ADD8(Reg(A), Immediate(0x75)), 2, 0xC6, 0x75);
+    }
 
+    #[test]
+     fn adc() {
         assert_opcode!(ADC(Reg(A), Reg(A)), 1, 0x8F);
         assert_opcode!(ADC(Reg(A), Reg(B)), 1, 0x88);
         assert_opcode!(ADC(Reg(A), Reg(C)), 1, 0x89);
@@ -147,6 +151,11 @@ mod test {
         assert_opcode!(SUB8(Reg(A), RegIndirect(HL)), 1, 0x96);
         assert_opcode!(SUB8(Reg(A), Immediate(0x75)), 2, 0xD6, 0x75);
 
+    }
+
+    #[test]
+    fn sbc() {
+
         assert_opcode!(SBC(Reg(A), Reg(A)), 1, 0x9F);
         assert_opcode!(SBC(Reg(A), Reg(B)), 1, 0x98);
         assert_opcode!(SBC(Reg(A), Reg(C)), 1, 0x99);
@@ -160,6 +169,7 @@ mod test {
     }
 
     #[test]
+    #[allow(clippy::cyclomatic_complexity)]
     fn ld_rr() {
         assert_opcode!(LD8(Reg(A), Reg(A)), 1, 0x7F);
         assert_opcode!(LD8(Reg(A), Reg(B)), 1, 0x78);

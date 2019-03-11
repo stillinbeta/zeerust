@@ -168,8 +168,8 @@ impl<'a> Z80<'a> {
 
     fn complement(&mut self) {
         let reg_a = ops::Reg8::A;
-        let a = self.registers.get_reg8(&reg_a);
-        self.registers.set_reg8(&reg_a, !a);
+        let a = self.registers.get_reg8(reg_a);
+        self.registers.set_reg8(reg_a, !a);
 
         self.registers.set_flag(&ops::StatusFlag::HalfCarry, true);
         self.registers.set_flag(&ops::StatusFlag::AddSubtract, true);
@@ -177,12 +177,12 @@ impl<'a> Z80<'a> {
 
     fn negate(&mut self) {
         let reg_a = ops::Reg8::A;
-        let a = self.registers.get_reg8(&reg_a);
+        let a = self.registers.get_reg8(reg_a);
 
         let complement = (1_u16 << 8) - u16::from(a);
         let [result, _] = complement.to_le_bytes();
         // let result = (!a) + 1
-        self.registers.set_reg8(&reg_a, result);
+        self.registers.set_reg8(reg_a, result);
 
         self.registers
             .set_flag(&ops::StatusFlag::Sign, (result & 0b1000_0000) != 0);
@@ -394,7 +394,7 @@ impl<'a> Z80<'a> {
     fn get_loc8(&self, loc: &ops::Location8) -> u8 {
         match loc {
             ops::Location8::Immediate(v) => *v,
-            ops::Location8::Reg(reg) => self.registers.get_reg8(&reg),
+            ops::Location8::Reg(reg) => self.registers.get_reg8(*reg),
             ops::Location8::RegIndirect(reg) => {
                 let addr = self.registers.get_reg16(&reg);
                 self.memory.memory[addr as usize]
@@ -405,7 +405,7 @@ impl<'a> Z80<'a> {
     fn set_loc8(&mut self, loc: &ops::Location8, val: u8) {
         match loc {
             ops::Location8::Immediate(_) => panic!("Attempting to set immediate value!"),
-            ops::Location8::Reg(reg) => self.registers.set_reg8(reg, val),
+            ops::Location8::Reg(reg) => self.registers.set_reg8(*reg, val),
             ops::Location8::RegIndirect(reg) => {
                 let addr = self.registers.get_reg16(reg);
                 self.memory.memory[addr as usize] = val;
