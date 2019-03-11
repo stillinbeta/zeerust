@@ -206,10 +206,7 @@ fn dec_op() {
 fn and_op() {
     let mut z80 = Z80::default();
     z80.registers.set_reg8(Reg8::A, 0b1001_1000);
-    z80.exec(Op::AND(
-        Location8::Reg(Reg8::A),
-        Location8::Immediate(0b0000_0000),
-    ));
+    z80.exec(Op::AND(Location8::Immediate(0b0000_0000)));
     assert_bin!(0b0000_0000, z80.registers.get_reg8(Reg8::A));
     assert_flags!(
         z80.registers,
@@ -226,10 +223,7 @@ fn and_op() {
 fn or_op() {
     let mut z80 = Z80::default();
     z80.registers.set_reg8(Reg8::A, 0b1001_1000);
-    z80.exec(Op::OR(
-        Location8::Reg(Reg8::A),
-        Location8::Immediate(0b0001_1011),
-    ));
+    z80.exec(Op::OR(Location8::Immediate(0b0001_1011)));
     assert_bin!(0b1001_1011, z80.registers.get_reg8(Reg8::A));
     assert_flags!(
         z80.registers,
@@ -246,10 +240,7 @@ fn or_op() {
 fn xor_op() {
     let mut z80 = Z80::default();
     z80.registers.set_reg8(Reg8::A, 0b0011_1100);
-    z80.exec(Op::XOR(
-        Location8::Reg(Reg8::A),
-        Location8::Immediate(0b0001_1011),
-    ));
+    z80.exec(Op::XOR(Location8::Immediate(0b0001_1011)));
     assert_bin!(0b0010_0111, z80.registers.get_reg8(Reg8::A));
     assert_flags!(
         z80.registers,

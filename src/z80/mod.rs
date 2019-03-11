@@ -35,9 +35,9 @@ impl<'a> Z80<'a> {
             ops::Op::DEC(dst) => self.subtract(&dst, &Self::ONE_IMM, false, true),
             ops::Op::CP(src) => self.subtract(&Self::ACC, &src, false, false),
 
-            ops::Op::AND(dst, src) => self.bool_op(&dst, &src, |d, s| d & s),
-            ops::Op::OR(dst, src) => self.bool_op(&dst, &src, |d, s| d | s),
-            ops::Op::XOR(dst, src) => self.bool_op(&dst, &src, |d, s| d ^ s),
+            ops::Op::AND(src) => self.bool_op(&src, |d, s| d & s),
+            ops::Op::OR(src) => self.bool_op(&src, |d, s| d | s),
+            ops::Op::XOR(src) => self.bool_op(&src, |d, s| d ^ s),
 
             ops::Op::DAA => unimplemented!(),
             ops::Op::CPL => self.complement(),
@@ -145,15 +145,15 @@ impl<'a> Z80<'a> {
             .set_flag(&ops::StatusFlag::Sign, (sum & 0b1000_0000) != 0);
     }
 
-    fn bool_op<F>(&mut self, dst: &ops::Location8, src: &ops::Location8, f: F)
+    fn bool_op<F>(&mut self, src: &ops::Location8, f: F)
     where
         F: Fn(u8, u8) -> u8,
     {
-        let v1 = self.get_loc8(dst);
+        let v1 = self.get_loc8(&Self::ACC);
         let v2 = self.get_loc8(src);
 
         let result = f(v1, v2);
-        self.set_loc8(&dst, result);
+        self.set_loc8(&Self::ACC, result);
 
         // Seven bit carry is reset
         self.registers.set_flag(&ops::StatusFlag::Carry, false);

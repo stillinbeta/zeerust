@@ -65,6 +65,31 @@ pub fn opcode(code: [u8; 4]) -> (Op, u8) {
             )
         }
 
+        // Misc Math
+        [0x2F, _, _, _] => (Op::CPL, 1),
+        [0xED, 0x44, _, _] => (Op::NEG, 2),
+        [0x3F, _, _, _] => (Op::CCF, 1),
+        [0x37, _, _, _] => (Op::SCF, 1),
+
+        [op, o1, _, _] if op & 0b1010_0000 == 0b1010_0000 => {
+            let opr = match op & 0b0001_1000 {
+                0b0000_0000 => Op::AND,
+                0b0001_0000 => Op::OR,
+                0b0000_1000 => Op::XOR,
+                0b0001_1000 => Op::CP,
+                _ => unreachable!(),
+            };
+            let (loc, b) = if op & 0b0100_0000 == 0b0100_0000 {
+                // if 6th bit set, immediate
+                (Location8::Immediate(o1), 2)
+            } else {
+                // Otherwise Just a regular bit register
+                (reg_bits(op), 1)
+            };
+            (opr(loc), b)
+        }
+
+        // [op, _, _, ]
         [o1, o2, o3, o4] => panic!(
             "Unimplemented opcode [{:02x}, {:02x}, {:02x}, {:02x}]",
             o1, o2, o3, o4
@@ -72,6 +97,7 @@ pub fn opcode(code: [u8; 4]) -> (Op, u8) {
     }
 }
 
+// Many instructions use a common bit pattern to designate single registers.
 fn reg_bits(bits: u8) -> Location8 {
     match bits & 0b111 {
         0b111 => Location8::Reg(Reg8::A),
@@ -90,6 +116,7 @@ fn reg_bits(bits: u8) -> Location8 {
 mod test {
 
     #[allow(unused_imports)]
+    use crate::ops::Op;
     use crate::ops::{Location8::*, Op::*, Reg16::*, Reg8::*};
 
     macro_rules! op4 {
@@ -315,5 +342,79 @@ mod test {
         assert_opcode!(LD8(RegIndirect(BC), Reg(A)), 1, 0x02);
         assert_opcode!(LD8(RegIndirect(DE), Reg(A)), 1, 0x12);
         assert_opcode!(LD8(ImmediateIndirect(0x01AA), Reg(A)), 3, 0x32, 0xAA, 0x01);
+    }
+
+    #[test]
+    fn cpl() {
+        assert_opcode!(CPL, 1, 0x2f);
+    }
+
+    #[test]
+    fn neg() {
+        assert_opcode!(NEG, 2, 0xED, 0x44);
+    }
+
+    #[test]
+    fn ccf() {
+        assert_opcode!(CCF, 1, 0x3F);
+    }
+
+    #[test]
+    fn scf() {
+        assert_opcode!(SCF, 1, 0x37);
+    }
+
+    #[test]
+    fn and() {
+        assert_opcode!(AND(Reg(A)), 1, 0xA7);
+        assert_opcode!(AND(Reg(B)), 1, 0xA0);
+        assert_opcode!(AND(Reg(C)), 1, 0xA1);
+        assert_opcode!(AND(Reg(D)), 1, 0xA2);
+        assert_opcode!(AND(Reg(E)), 1, 0xA3);
+        assert_opcode!(AND(Reg(H)), 1, 0xA4);
+        assert_opcode!(AND(Reg(L)), 1, 0xA5);
+        assert_opcode!(AND(RegIndirect(HL)), 1, 0xA6);
+
+        assert_opcode!(AND(Immediate(0xAB)), 2, 0xE6, 0xAB);
+    }
+
+    #[test]
+    fn or() {
+        assert_opcode!(OR(Reg(A)), 1, 0xB7);
+        assert_opcode!(OR(Reg(B)), 1, 0xB0);
+        assert_opcode!(OR(Reg(C)), 1, 0xB1);
+        assert_opcode!(OR(Reg(D)), 1, 0xB2);
+        assert_opcode!(OR(Reg(E)), 1, 0xB3);
+        assert_opcode!(OR(Reg(H)), 1, 0xB4);
+        assert_opcode!(OR(Reg(L)), 1, 0xB5);
+        assert_opcode!(OR(RegIndirect(HL)), 1, 0xB6);
+        assert_opcode!(OR(Immediate(0xBA)), 2, 0xF6, 0xBA);
+    }
+
+    #[test]
+    fn xor() {
+        assert_opcode!(XOR(Reg(A)), 1, 0xAF);
+        assert_opcode!(XOR(Reg(B)), 1, 0xA8);
+        assert_opcode!(XOR(Reg(C)), 1, 0xA9);
+        assert_opcode!(XOR(Reg(D)), 1, 0xAA);
+        assert_opcode!(XOR(Reg(E)), 1, 0xAB);
+        assert_opcode!(XOR(Reg(H)), 1, 0xAC);
+        assert_opcode!(XOR(Reg(L)), 1, 0xAD);
+        assert_opcode!(XOR(RegIndirect(HL)), 1, 0xAE);
+        assert_opcode!(XOR(Immediate(0xCA)), 2, 0xEE, 0xCA);
+    }
+
+    #[test]
+    fn cp() {
+        // Name collision on bare CP
+        assert_opcode!(Op::CP(Reg(A)), 1, 0xBF);
+        assert_opcode!(Op::CP(Reg(B)), 1, 0xB8);
+        assert_opcode!(Op::CP(Reg(C)), 1, 0xB9);
+        assert_opcode!(Op::CP(Reg(D)), 1, 0xBA);
+        assert_opcode!(Op::CP(Reg(E)), 1, 0xBB);
+        assert_opcode!(Op::CP(Reg(H)), 1, 0xBC);
+        assert_opcode!(Op::CP(Reg(L)), 1, 0xBD);
+        assert_opcode!(Op::CP(RegIndirect(HL)), 1, 0xBE);
+        assert_opcode!(Op::CP(Immediate(0xAC)), 2, 0xFE, 0xAC);
     }
 }

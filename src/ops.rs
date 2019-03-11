@@ -6,12 +6,13 @@ pub enum Op {
 
     SBC(Location8, Location8),  // Subtract including borrow
     SUB8(Location8, Location8), // Subtract
-    CP(Location8),              // Subtract, only setting flags
     DEC(Location8),             // Decement
 
-    AND(Location8, Location8),
-    OR(Location8, Location8),
-    XOR(Location8, Location8),
+    AND(Location8),
+    OR(Location8),
+    XOR(Location8),
+    CP(Location8), // Subtract, only setting flags
+
     CPL, // One's Compliment
     NEG, // Negation (two's compliment)
     CCF, // toggle carry flag
