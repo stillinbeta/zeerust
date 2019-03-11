@@ -128,12 +128,12 @@ fn adc8_op() {
 #[test]
 fn sub8_op() {
     let mut z80 = Z80::default();
-    z80.registers.set_reg8(&Reg8::A, 0b10100000);
+    z80.registers.set_reg8(&Reg8::A, 0b1010_0000);
     z80.exec(Op::SUB8(
         Location8::Reg(Reg8::A),
-        Location8::Immediate(0b01000100),
+        Location8::Immediate(0b0100_0100),
     ));
-    assert_bin!(0b01011100, z80.registers.get_reg8(&Reg8::A));
+    assert_bin!(0b0101_1100, z80.registers.get_reg8(&Reg8::A));
     assert_flags!(
         z80.registers,
         Sign = false,
