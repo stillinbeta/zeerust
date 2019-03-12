@@ -4,7 +4,6 @@ use crate::cpu;
 use crate::ops;
 
 pub mod io;
-pub mod opcode;
 #[cfg(test)]
 mod tests;
 
