@@ -13,15 +13,7 @@ fn hello_zeerust() {
     z80.run(HELLO_ZEERUST);
 
     assert_eq!(
-        vec!(
-            'Z' as u8,
-            'E' as u8,
-            'E' as u8,
-            'R' as u8,
-            'U' as u8,
-            'S' as u8,
-            'T' as u8,
-        ),
+        vec!('Z' as u8, 'E' as u8, 'E' as u8, 'R' as u8, 'U' as u8, 'S' as u8, 'T' as u8,),
         buf.result()
     );
 }

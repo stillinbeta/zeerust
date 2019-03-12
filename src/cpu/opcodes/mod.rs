@@ -1,8 +1,8 @@
 use crate::ops::{Location8, Op, Reg16, Reg8};
 
+mod file;
 #[cfg(test)]
 mod test;
-mod file;
 
 pub use file::parse_stream;
 

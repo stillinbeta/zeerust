@@ -1,14 +1,13 @@
 extern crate zeerust;
 
-use std::io::{Result, Read, Write, stdout};
 use std::env;
 use std::fs::File;
+use std::io::{stdout, Read, Result, Write};
 
-use zeerust::z80::io;
 use zeerust::z80;
+use zeerust::z80::io;
 
-
-struct StdoutOutput{}
+struct StdoutOutput {}
 
 impl io::OutputDevice for StdoutOutput {
     fn output(&self, byte: u8) {
@@ -16,12 +15,12 @@ impl io::OutputDevice for StdoutOutput {
     }
 }
 
-const STDOUT_DEVICE: StdoutOutput = StdoutOutput{};
+const STDOUT_DEVICE: StdoutOutput = StdoutOutput {};
 
 fn main() -> Result<()> {
     let filename = env::args().nth(1).unwrap_or_else(|| {
-            eprintln!("Missing file to run");
-            std::process::exit(1);
+        eprintln!("Missing file to run");
+        std::process::exit(1);
     });
     let mut file = File::open(filename)?;
     let mut buf = Vec::new();

@@ -18,7 +18,7 @@ pub enum Op {
     CCF, // toggle carry flag
     SCF, // set carry flag unconditionally
 
-    NOP, // Do nothing
+    NOP,  // Do nothing
     HALT, // End execution (until woken)
 
     DAA, // BCD Nonsense. Not implemented.
