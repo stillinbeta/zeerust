@@ -1,3 +1,3 @@
 pub mod mem;
-pub mod reg;
 pub mod opcodes;
+pub mod reg;

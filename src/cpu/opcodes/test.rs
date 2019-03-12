@@ -1,7 +1,7 @@
+use crate::cpu::opcodes::opcode;
 #[allow(unused_imports)]
 use crate::ops::Op;
 use crate::ops::{Location8::*, Op::*, Reg16::*, Reg8::*};
-use crate::cpu::opcodes::opcode;
 
 macro_rules! op4 {
     ($o1 : expr) => {
@@ -307,6 +307,7 @@ mod bits {
     use super::*;
 
     #[test]
+    #[allow(clippy::cyclomatic_complexity)]
     fn get() {
         assert_opcode!(BIT(0, Reg(A)), 2, 0xCB, 0x47);
         assert_opcode!(BIT(0, Reg(B)), 2, 0xCB, 0x40);
@@ -382,6 +383,7 @@ mod bits {
     }
 
     #[test]
+    #[allow(clippy::cyclomatic_complexity)]
     fn reset() {
         assert_opcode!(RES(0, Reg(A)), 2, 0xCB, 0x87);
         assert_opcode!(RES(0, Reg(B)), 2, 0xCB, 0x80);
@@ -456,7 +458,8 @@ mod bits {
         assert_opcode!(RES(7, RegIndirect(HL)), 2, 0xCB, 0xBE);
     }
 
-#[test]
+    #[test]
+    #[allow(clippy::cyclomatic_complexity)]
     fn set() {
         assert_opcode!(SET(0, Reg(A)), 2, 0xCB, 0xC7);
         assert_opcode!(SET(0, Reg(B)), 2, 0xCB, 0xC0);
@@ -668,7 +671,7 @@ fn input() {
 }
 
 #[test]
-#[should_panic(expected="Unknown ExtendeD operation")]
+#[should_panic(expected = "Unknown ExtendeD operation")]
 fn input_hl() {
     opcode(op4!(0xED, 0x70));
 }
@@ -687,7 +690,7 @@ fn output() {
 }
 
 #[test]
-#[should_panic(expected="Unknown ExtendeD operation")]
+#[should_panic(expected = "Unknown ExtendeD operation")]
 fn output_hl() {
     opcode(op4!(0xED, 0x71));
 }
