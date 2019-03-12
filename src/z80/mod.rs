@@ -66,8 +66,8 @@ impl<'a> Z80<'a> {
             ops::Op::SET(b, loc) => self.set_bit(b, &loc),
             ops::Op::RES(b, loc) => self.reset_bit(b, &loc),
 
-            ops::Op::IN(loc, n) => self.read_in(n, &loc),
-            ops::Op::OUT(loc, n) => self.write_out(n, &loc),
+            ops::Op::IN(dst, src_port) => self.read_in(&src_port, &dst),
+            ops::Op::OUT(src, dst_port) => self.write_out(&dst_port, &src),
         }
     }
 
@@ -363,7 +363,8 @@ impl<'a> Z80<'a> {
         self.set_loc8(loc, val & !(1 << bit));
     }
 
-    fn read_in(&mut self, peripheral: u8, loc: &ops::Location8) {
+    fn read_in(&mut self, peripheral: &ops::Location8, loc: &ops::Location8) {
+        let peripheral = self.get_loc8(peripheral);
         let result = match self.input_devices.get_mut(&peripheral) {
             None => panic!("no peripheral installed in 0x{:02x}", peripheral),
             Some(d) => d.input(),
@@ -371,9 +372,9 @@ impl<'a> Z80<'a> {
         self.set_loc8(loc, result);
     }
 
-    fn write_out(&mut self, peripheral: u8, loc: &ops::Location8) {
+    fn write_out(&mut self, peripheral: &ops::Location8, loc: &ops::Location8) {
+        let peripheral = self.get_loc8(peripheral);
         let val = self.get_loc8(loc);
-
         match self.output_devices.get_mut(&peripheral) {
             None => panic!("no peripheral installed in 0x{:02x}", peripheral),
             Some(d) => d.output(val),

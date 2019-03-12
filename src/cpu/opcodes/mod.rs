@@ -43,8 +43,29 @@ pub fn opcode(code: [u8; 4]) -> (Op, u8) {
         }
 
         // Input/Output
-        [0xDB, n, _, _] => (Op::IN(Location8::Reg(Reg8::A), n), 2),
-        [0xD3, n, _, _] => (Op::OUT(Location8::Reg(Reg8::A), n), 2),
+        [0xDB, n, _, _] => (Op::IN(Location8::Reg(Reg8::A), Location8::Immediate(n)), 2),
+        [0xD3, n, _, _] => (Op::OUT(Location8::Reg(Reg8::A), Location8::Immediate(n)), 2),
+        [0xED, op, _, _] if op & 0b1100_0110 == 0b0100_0000 => {
+            let opr = if op & 0b1 == 0b1 {
+                Op::OUT
+            } else {
+                Op::IN
+            };
+            if let reg@Location8::Reg(_) = reg_bits(op >> 3) {
+                (opr(reg, Location8::Reg(Reg8::C)), 2)
+            } else {
+                // {IN,OUT}((HL), (C)) is not valid
+                panic!("Unknown ExtendeD operation {:02x}", op)
+            }
+        }
+        [0xED, op, _, _] if op & 0b1100_0111 == 0b0100_0000 => {
+            if let reg@Location8::Reg(_) = reg_bits(op >> 3) {
+                (Op::IN(reg, Location8::Reg(Reg8::C)), 2)
+            } else {
+                // IN((HL), (C)) is not valid
+                panic!("Unknown IN operation")
+            }
+        }
 
         // INC
         [a, _, _, _] if a & 0b1100_0111 == 0b0000_0100 => (Op::INC(reg_bits(a >> 3)), 1),

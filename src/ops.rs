@@ -42,8 +42,8 @@ pub enum Op {
     SET(u8, Location8), // SET b bit in location
     RES(u8, Location8), // RESet b bit in location
 
-    IN(Location8, u8),
-    OUT(Location8, u8),
+    IN(Location8, Location8),
+    OUT(Location8, Location8),
     // CALL,
     // CPD,
     // CPDR,

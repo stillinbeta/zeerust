@@ -1,6 +1,7 @@
 #[allow(unused_imports)]
 use crate::ops::Op;
 use crate::ops::{Location8::*, Op::*, Reg16::*, Reg8::*};
+use crate::cpu::opcodes::opcode;
 
 macro_rules! op4 {
     ($o1 : expr) => {
@@ -304,7 +305,6 @@ fn cp() {
 #[cfg(test)]
 mod bits {
     use super::*;
-    use crate::cpu::opcodes::opcode;
 
     #[test]
     fn get() {
@@ -656,10 +656,38 @@ mod bits {
 
 #[test]
 fn input() {
-    assert_opcode!(IN(Reg(A), 0x75), 2, 0xDB, 0x75);
+    assert_opcode!(IN(Reg(A), Immediate(0x75)), 2, 0xDB, 0x75);
+
+    assert_opcode!(IN(Reg(A), Reg(C)), 2, 0xED, 0x78);
+    assert_opcode!(IN(Reg(B), Reg(C)), 2, 0xED, 0x40);
+    assert_opcode!(IN(Reg(C), Reg(C)), 2, 0xED, 0x48);
+    assert_opcode!(IN(Reg(D), Reg(C)), 2, 0xED, 0x50);
+    assert_opcode!(IN(Reg(E), Reg(C)), 2, 0xED, 0x58);
+    assert_opcode!(IN(Reg(H), Reg(C)), 2, 0xED, 0x60);
+    assert_opcode!(IN(Reg(L), Reg(C)), 2, 0xED, 0x68);
+}
+
+#[test]
+#[should_panic(expected="Unknown ExtendeD operation")]
+fn input_hl() {
+    opcode(op4!(0xED, 0x70));
 }
 
 #[test]
 fn output() {
-    assert_opcode!(OUT(Reg(A), 0xF5), 2, 0xD3, 0xF5);
+    assert_opcode!(OUT(Reg(A), Immediate(0xF5)), 2, 0xD3, 0xF5);
+
+    assert_opcode!(OUT(Reg(A), Reg(C)), 2, 0xED, 0x79);
+    assert_opcode!(OUT(Reg(B), Reg(C)), 2, 0xED, 0x41);
+    assert_opcode!(OUT(Reg(C), Reg(C)), 2, 0xED, 0x49);
+    assert_opcode!(OUT(Reg(D), Reg(C)), 2, 0xED, 0x51);
+    assert_opcode!(OUT(Reg(E), Reg(C)), 2, 0xED, 0x59);
+    assert_opcode!(OUT(Reg(H), Reg(C)), 2, 0xED, 0x61);
+    assert_opcode!(OUT(Reg(L), Reg(C)), 2, 0xED, 0x69);
+}
+
+#[test]
+#[should_panic(expected="Unknown ExtendeD operation")]
+fn output_hl() {
+    opcode(op4!(0xED, 0x71));
 }
