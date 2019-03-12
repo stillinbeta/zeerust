@@ -8,12 +8,18 @@ Zeerust will be a z80 emulator, written entirely in Rust.
 
 ## TODO
 
-* [ ] Loading registers
-* [ ] Arithetic
-* [ ] Opcode parsing
+* [x] Loading registers
+* [x] Arithmetic
+* [x] Opcode parsing
 * [ ] Other operations!
-* [ ] Input/Output
+* [x] Input/Output
 * [ ] Debugger
 * [ ] ???
 
 [zeerust]: https://tvtropes.org/pmwiki/pmwiki.php/Main/Zeerust
+
+```
+cargo install --path .
+zeerust tests/zeerust.bin
+ZEERUST%
+```
