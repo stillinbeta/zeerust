@@ -7,6 +7,13 @@ pub fn opcode(code: [u8; 4]) -> (Op, u8) {
     match code {
         [0x00, _, _, _] => (Op::NOP, 1),
 
+        // Rotates without operands
+        [0x07, _, _, _] => (Op::RLCA, 1),
+        [0x0F, _, _, _] => (Op::RRCA, 1),
+        [0x17, _, _, _] => (Op::RLA, 1),
+        [0x1F, _, _, _] => (Op::RRA, 1),
+        [0xED, 0x67, _, _] => (Op::RRD, 2),
+        [0xED, 0x6F, _, _] => (Op::RLD, 2),
         // Bits are all 0xCB
         [0xCB, op, _, _] => {
             let loc = reg_bits(op);
@@ -19,20 +26,25 @@ pub fn opcode(code: [u8; 4]) -> (Op, u8) {
                         0b011 => Op::RR,
                         0b100 => Op::SLA,
                         0b101 => Op::SRA,
+                        // http://z80-heaven.wikidot.com/instructions-set:sll
                         0b110 => panic!("Use of undocumented instruction SLL"),
                         0b111 => Op::SRL,
-                        _ => unreachable!()
+                        _ => unreachable!(),
                     };
-                    return (opr(loc), 2)
+                    return (opr(loc), 2);
                 }
                 0b01 => Op::BIT,
                 0b10 => Op::RES,
                 0b11 => Op::SET,
-                _ => unimplemented!(),
+                _ => unreachable!(),
             };
             let reg = (op >> 3) & 0b111;
             (opr(reg, loc), 2)
         }
+
+        // Input/Output
+        [0xDB, n, _, _] => (Op::IN(Location8::Reg(Reg8::A), n), 2),
+        [0xD3, n, _, _] => (Op::OUT(Location8::Reg(Reg8::A), n), 2),
 
         // INC
         [a, _, _, _] if a & 0b1100_0111 == 0b0000_0100 => (Op::INC(reg_bits(a >> 3)), 1),
@@ -142,5 +154,3 @@ fn reg_bits(bits: u8) -> Location8 {
         _ => unreachable!(),
     }
 }
-
-
