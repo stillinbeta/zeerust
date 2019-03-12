@@ -766,3 +766,10 @@ fn out_no_device_installed() {
     let mut z80 = Z80::default();
     z80.exec(Op::OUT(Location8::Reg(Reg8::A), Location8::Immediate(0x00)));
 }
+
+#[test]
+fn halt() {
+    let mut z80 = Z80::default();
+    z80.exec(Op::HALT);
+    assert!(z80.is_halted);
+}

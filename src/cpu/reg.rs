@@ -19,6 +19,8 @@ pub struct Registers {
     fp: u8,
     hp: u8,
     lp: u8,
+
+    pc: u16,
 }
 
 impl Registers {
@@ -104,6 +106,14 @@ impl Registers {
         };
         (u16::from(r1) << 8) + u16::from(r0)
     }
+
+    pub fn get_pc(&self) -> u16 {
+        self.pc
+    }
+
+    pub fn set_pc(&mut self, pc: u16) {
+        self.pc = pc
+    }
 }
 
 #[cfg(test)]
@@ -128,6 +138,8 @@ mod test {
         fp: 0x26,
         hp: 0x27,
         lp: 0x28,
+
+        pc: 0x00,
     };
 
     #[test]
@@ -220,5 +232,16 @@ mod test {
         assert_eq!(0x2322, REGS.get_reg16(&Reg16::BCP));
         assert_eq!(0x2524, REGS.get_reg16(&Reg16::DEP));
         assert_eq!(0x2827, REGS.get_reg16(&Reg16::HLP));
+    }
+
+    #[test]
+    fn pc() {
+        let mut regs = Registers::default();
+
+        regs.set_pc(0x75);
+        assert_eq!(0x75, regs.get_pc());
+
+        regs.set_pc(0xF5);
+        assert_eq!(0xF5, regs.get_pc());
     }
 }

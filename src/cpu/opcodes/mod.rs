@@ -2,10 +2,14 @@ use crate::ops::{Location8, Op, Reg16, Reg8};
 
 #[cfg(test)]
 mod test;
+mod file;
 
-pub fn opcode(code: [u8; 4]) -> (Op, u8) {
+pub use file::parse_stream;
+
+pub fn opcode(code: [u8; 4]) -> (Op, usize) {
     match code {
         [0x00, _, _, _] => (Op::NOP, 1),
+        [0x76, _, _, _] => (Op::HALT, 1),
 
         // Rotates without operands
         [0x07, _, _, _] => (Op::RLCA, 1),

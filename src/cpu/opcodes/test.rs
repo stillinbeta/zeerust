@@ -47,6 +47,11 @@ fn nop() {
 }
 
 #[test]
+fn halt() {
+    assert_opcode!(HALT, 1, 0x76);
+}
+
+#[test]
 fn inc() {
     assert_opcode!(INC(Reg(A)), 1, 0x3C);
     assert_opcode!(INC(Reg(B)), 1, 0x04);

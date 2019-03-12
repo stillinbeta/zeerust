@@ -4,6 +4,7 @@ use crate::cpu;
 use crate::ops;
 
 pub mod io;
+mod run;
 #[cfg(test)]
 mod tests;
 
@@ -11,6 +12,8 @@ mod tests;
 pub struct Z80<'a> {
     registers: cpu::reg::Registers,
     memory: cpu::mem::Memory,
+
+    is_halted: bool,
 
     input_devices: HashMap<u8, &'a io::InputDevice>,
     output_devices: HashMap<u8, &'a io::OutputDevice>,
@@ -45,6 +48,7 @@ impl<'a> Z80<'a> {
             ops::Op::SCF => self.set_carry(),
 
             ops::Op::NOP => (),
+            ops::Op::HALT => self.is_halted = true,
 
             ops::Op::RLCA => self.rotate_left(&Self::ACC, false),
             ops::Op::RLA => self.rotate_left_thru_acc(&Self::ACC, false),
