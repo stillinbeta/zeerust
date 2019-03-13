@@ -1,5 +1,5 @@
 use super::Z80;
-use crate::ops::{Location8, Op, Reg16, Reg8, StatusFlag};
+use crate::ops::{JumpConditional, Location16, Location8, Op, Reg16, Reg8, StatusFlag};
 
 #[test]
 fn get_loc8() {
@@ -14,6 +14,16 @@ fn get_loc8() {
     assert_hex!(0xD1, z80.get_loc8(&Location8::RegIndirect(Reg16::HL)));
     assert_hex!(0xCC, z80.get_loc8(&Location8::Immediate(0xCC)));
     assert_hex!(0x75, z80.get_loc8(&Location8::ImmediateIndirect(0x0DCC)));
+}
+
+#[test]
+fn get_loc16() {
+    let mut z80 = Z80::default();
+    z80.registers.set_reg8(Reg8::H, 0xCC);
+    z80.registers.set_reg8(Reg8::L, 0x0D);
+
+    assert_hex!(0x0DCC, z80.get_loc16(&Location16::Reg(Reg16::HL)));
+    assert_hex!(0xF0C5, z80.get_loc16(&Location16::Immediate(0xF0C5)));
 }
 
 #[test]
@@ -46,6 +56,20 @@ fn set_loc8() {
 
     z80.set_loc8(&Location8::ImmediateIndirect(0x0C22), 0xF5);
     assert_hex!(0xF5, z80.memory.memory[0x0C22]);
+}
+
+#[test]
+#[should_panic]
+fn set_loc16_immediate_panic() {
+    let mut z80 = Z80::default();
+    z80.set_loc16(&Location16::Immediate(0x0000), 0x00);
+}
+
+#[test]
+fn set_loc16() {
+    let mut z80 = Z80::default();
+    z80.set_loc16(&Location16::Reg(Reg16::DE), 0xDDEE);
+    assert_hex!(0xDDEE, z80.registers.get_reg16(&Reg16::DE));
 }
 
 #[test]
@@ -772,4 +796,106 @@ fn halt() {
     let mut z80 = Z80::default();
     z80.exec(Op::HALT);
     assert!(z80.is_halted);
+}
+
+#[test]
+fn jp() {
+    let mut z80 = Z80::default();
+    assert_eq!(
+        Some(0x0CFF),
+        z80.exec_with_offset(Op::JP(
+            JumpConditional::Unconditional,
+            Location16::Immediate(0x0CFF)
+        )),
+    );
+
+    z80.set_loc16(&Location16::Reg(Reg16::HL), 0xABBA); // Dancing queen
+    assert_eq!(
+        Some(0xABBA),
+        z80.exec_with_offset(Op::JP(
+            JumpConditional::Unconditional,
+            Location16::Reg(Reg16::HL)
+        )),
+    )
+}
+
+#[test]
+fn jp_conditional() {
+    let mut z80 = Z80::default();
+
+    z80.registers.set_flag(&StatusFlag::Zero, true);
+    let op1 = Op::JP(JumpConditional::Zero, Location16::Immediate(0x0CFF));
+    let op2 = Op::JP(JumpConditional::NonZero, Location16::Immediate(0x0CDD));
+    assert_eq!(Some(0x0CFF), z80.exec_with_offset(op1.clone()));
+    assert_eq!(None, z80.exec_with_offset(op2.clone()));
+    z80.registers.set_flag(&StatusFlag::Zero, false);
+    assert_eq!(None, z80.exec_with_offset(op1));
+    assert_eq!(Some(0x0CDD), z80.exec_with_offset(op2));
+
+    z80.registers.set_flag(&StatusFlag::Carry, true);
+    let op1 = Op::JP(JumpConditional::Carry, Location16::Immediate(0x0CFF));
+    let op2 = Op::JP(JumpConditional::NoCarry, Location16::Immediate(0x0CDD));
+    assert_eq!(Some(0x0CFF), z80.exec_with_offset(op1.clone()));
+    assert_eq!(None, z80.exec_with_offset(op2.clone()));
+    z80.registers.set_flag(&StatusFlag::Carry, false);
+    assert_eq!(None, z80.exec_with_offset(op1));
+    assert_eq!(Some(0x0CDD), z80.exec_with_offset(op2));
+
+    z80.registers.set_flag(&StatusFlag::ParityOverflow, true);
+    let op1 = Op::JP(JumpConditional::ParityEven, Location16::Immediate(0x0CDD));
+    let op2 = Op::JP(JumpConditional::ParityOdd, Location16::Immediate(0x0CFF));
+    assert_eq!(Some(0x0CDD), z80.exec_with_offset(op1.clone()));
+    assert_eq!(None, z80.exec_with_offset(op2.clone()));
+    z80.registers.set_flag(&StatusFlag::ParityOverflow, false);
+    assert_eq!(None, z80.exec_with_offset(op1));
+    assert_eq!(Some(0x0CFF), z80.exec_with_offset(op2));
+
+    z80.registers.set_flag(&StatusFlag::Sign, true);
+    let op1 = Op::JP(JumpConditional::SignNegative, Location16::Immediate(0x0CFF));
+    let op2 = Op::JP(JumpConditional::SignPositive, Location16::Immediate(0x0CDD));
+    assert_eq!(Some(0x0CFF), z80.exec_with_offset(op1.clone()));
+    assert_eq!(None, z80.exec_with_offset(op2.clone()));
+    z80.registers.set_flag(&StatusFlag::Sign, false);
+    assert_eq!(None, z80.exec_with_offset(op1));
+    assert_eq!(Some(0x0CDD), z80.exec_with_offset(op2));
+}
+
+#[test]
+fn jr() {
+    let mut z80 = Z80::default();
+    z80.registers.set_pc(0xA123);
+
+    assert_eq!(
+        Some(0xA123 + 129),
+        z80.exec_with_offset(Op::JR(JumpConditional::Unconditional, 127))
+    );
+
+    z80.registers.set_flag(&StatusFlag::Zero, true);
+    let op1 = Op::JR(JumpConditional::Zero, -128);
+    let op2 = Op::JR(JumpConditional::NonZero, 127);
+    assert_eq!(Some(0xA123 - 126), z80.exec_with_offset(op1.clone()));
+    assert_eq!(None, z80.exec_with_offset(op2.clone()));
+    z80.registers.set_flag(&StatusFlag::Zero, false);
+    assert_eq!(None, z80.exec_with_offset(op1));
+    assert_eq!(Some(0xA123 + 129), z80.exec_with_offset(op2));
+
+    z80.registers.set_flag(&StatusFlag::Carry, true);
+    let op1 = Op::JR(JumpConditional::Carry, 15);
+    let op2 = Op::JR(JumpConditional::NoCarry, -100);
+    assert_eq!(Some(0xA123 + 17), z80.exec_with_offset(op1.clone()));
+    assert_eq!(None, z80.exec_with_offset(op2.clone()));
+    z80.registers.set_flag(&StatusFlag::Carry, false);
+    assert_eq!(None, z80.exec_with_offset(op1));
+    assert_eq!(Some(0xA123 - 98), z80.exec_with_offset(op2));
+}
+
+#[test]
+fn djnz() {
+    let mut z80 = Z80::default();
+    z80.set_loc8(&Location8::Reg(Reg8::B), 2);
+    z80.registers.set_pc(0xAB50);
+
+    assert_eq!(Some(0xAB00), z80.exec_with_offset(Op::DJNZ(-82)));
+    assert_eq!(None, z80.exec_with_offset(Op::DJNZ(-52)));
+    assert_eq!(0, z80.registers.get_reg8(Reg8::B));
 }

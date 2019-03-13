@@ -1,4 +1,4 @@
-#[derive(Debug, PartialEq)]
+#[derive(Debug, PartialEq, Clone)]
 pub enum Op {
     ADC(Location8, Location8),  // Add including carry
     ADD8(Location8, Location8), // Add
@@ -45,32 +45,32 @@ pub enum Op {
 
     IN(Location8, Location8),
     OUT(Location8, Location8),
+
+    JP(JumpConditional, Location16),
+    JR(JumpConditional, i8),
+    DJNZ(i8),
+
     // CALL,
     // CPD,
     // CPDR,
     // CPI,
     // CPIR,
     // DI,
-    // DJNZ,
     // EI,
     // EX,
     // EXX,
-    // HALT,
     // IM,
     // IN,
     // IND,
     // INDR,
     // INI,
     // INIR,
-    // JP,
-    // JR,
     LD8(Location8, Location8),
     // LDD,
     // LDDR,
     // LDI,
     // OTDR,
     // OTIR,
-    // OUT,
     // OUTD,
     // OUTI,
     // POP,
@@ -106,7 +106,7 @@ pub enum Reg8 {
     LP,
 }
 
-#[derive(Debug, PartialEq)]
+#[derive(Debug, PartialEq, Clone)]
 pub enum Reg16 {
     AF,
     BC,
@@ -118,7 +118,7 @@ pub enum Reg16 {
     HLP,
 }
 
-#[derive(Debug, PartialEq)]
+#[derive(Debug, PartialEq, Clone)]
 pub enum Location8 {
     Reg(Reg8),
     RegIndirect(Reg16),
@@ -126,14 +126,14 @@ pub enum Location8 {
     Immediate(u8),
 }
 
-#[derive(Debug, PartialEq)]
+#[derive(Debug, PartialEq, Clone)]
 pub enum Location16 {
     Reg(Reg16),
-    RegIndirect(Reg16),
+    // RegIndirect(Reg16), // Is this used anywhere?
     Immediate(u16),
 }
 
-#[derive(Debug, PartialEq)]
+#[derive(Debug, PartialEq, Clone)]
 pub enum StatusFlag {
     Carry,
     AddSubtract,
@@ -141,4 +141,17 @@ pub enum StatusFlag {
     HalfCarry,
     Zero,
     Sign,
+}
+
+#[derive(Debug, PartialEq, Copy, Clone)]
+pub enum JumpConditional {
+    Unconditional,
+    NonZero,
+    Zero,
+    NoCarry,
+    Carry,
+    ParityOdd,
+    ParityEven,
+    SignPositive,
+    SignNegative,
 }

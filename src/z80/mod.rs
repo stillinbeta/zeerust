@@ -25,6 +25,10 @@ impl<'a> Z80<'a> {
     const HL_INDIRECT: ops::Location8 = ops::Location8::RegIndirect(ops::Reg16::HL);
 
     pub fn exec(&mut self, op: ops::Op) {
+        let _ = self.exec_with_offset(op);
+    }
+
+    fn exec_with_offset(&mut self, op: ops::Op) -> Option<u16> {
         match op {
             ops::Op::LD8(dst, src) => self.set_loc8(&dst, self.get_loc8(&src)),
 
@@ -72,7 +76,12 @@ impl<'a> Z80<'a> {
 
             ops::Op::IN(dst, src_port) => self.read_in(&src_port, &dst),
             ops::Op::OUT(src, dst_port) => self.write_out(&dst_port, &src),
-        }
+
+            ops::Op::JP(cond, addr) => return self.jump_cond(cond, &addr),
+            ops::Op::JR(cond, offset) => return self.jump_relative(cond, offset),
+            ops::Op::DJNZ(offset) => return self.decrement_jump(offset),
+        };
+        None
     }
 
     fn is_borrow(min: u8, sub: u8, bit: u8) -> bool {
@@ -418,6 +427,74 @@ impl<'a> Z80<'a> {
                 let addr = self.registers.get_reg16(reg);
                 self.memory.memory[addr as usize] = val;
             }
+        }
+    }
+
+    fn get_loc16(&mut self, loc: &ops::Location16) -> u16 {
+        match loc {
+            ops::Location16::Reg(reg) => self.registers.get_reg16(reg),
+            ops::Location16::Immediate(n) => *n,
+        }
+    }
+
+    #[allow(dead_code)] // used by tests
+    fn set_loc16(&mut self, loc: &ops::Location16, v: u16) {
+        match loc {
+            ops::Location16::Immediate(_) => panic!("Attempting to set immediate value!"),
+            ops::Location16::Reg(reg) => self.registers.set_reg16(reg, v),
+        }
+    }
+
+    fn eval_cond(&self, cond: ops::JumpConditional) -> bool {
+        match cond {
+            ops::JumpConditional::Unconditional => true,
+            ops::JumpConditional::Carry => self.registers.get_flag(&ops::StatusFlag::Carry),
+            ops::JumpConditional::NoCarry => !self.registers.get_flag(&ops::StatusFlag::Carry),
+
+            ops::JumpConditional::Zero => self.registers.get_flag(&ops::StatusFlag::Zero),
+            ops::JumpConditional::NonZero => !self.registers.get_flag(&ops::StatusFlag::Zero),
+
+            ops::JumpConditional::ParityEven => {
+                self.registers.get_flag(&ops::StatusFlag::ParityOverflow)
+            }
+            ops::JumpConditional::ParityOdd => {
+                !self.registers.get_flag(&ops::StatusFlag::ParityOverflow)
+            }
+
+            ops::JumpConditional::SignNegative => self.registers.get_flag(&ops::StatusFlag::Sign),
+            ops::JumpConditional::SignPositive => !self.registers.get_flag(&ops::StatusFlag::Sign),
+        }
+    }
+
+    fn jump_cond(&mut self, cond: ops::JumpConditional, loc: &ops::Location16) -> Option<u16> {
+        if self.eval_cond(cond) {
+            Some(self.get_loc16(loc))
+        } else {
+            None
+        }
+    }
+
+    fn pc_offset(&self, offset: i8) -> u16 {
+        self.registers.get_pc().wrapping_add(offset as u16) + 2
+    }
+
+    fn jump_relative(&mut self, cond: ops::JumpConditional, offset: i8) -> Option<u16> {
+        if self.eval_cond(cond) {
+            // Range is -126 to 129
+            Some(self.pc_offset(offset))
+        } else {
+            None
+        }
+    }
+
+    fn decrement_jump(&mut self, offset: i8) -> Option<u16> {
+        let b = self.registers.get_reg8(ops::Reg8::B);
+        let b = b.wrapping_sub(1);
+        self.registers.set_reg8(ops::Reg8::B, b);
+        if b != 0 {
+            Some(self.pc_offset(offset))
+        } else {
+            None
         }
     }
 }

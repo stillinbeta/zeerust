@@ -93,6 +93,44 @@ impl Registers {
         }
     }
 
+    pub fn set_reg16(&mut self, r: &Reg16, v: u16) {
+        let [r0, r1] = v.to_le_bytes();
+        match r {
+            Reg16::AF => {
+                self.a = r0;
+                self.f = r1;
+            }
+            Reg16::BC => {
+                self.b = r0;
+                self.c = r1;
+            }
+            Reg16::DE => {
+                self.d = r0;
+                self.e = r1;
+            }
+            Reg16::HL => {
+                self.h = r0;
+                self.l = r1;
+            }
+            Reg16::AFP => {
+                self.ap = r0;
+                self.fp = r1;
+            }
+            Reg16::BCP => {
+                self.bp = r0;
+                self.cp = r1;
+            }
+            Reg16::DEP => {
+                self.dp = r0;
+                self.ep = r1;
+            }
+            Reg16::HLP => {
+                self.hp = r0;
+                self.lp = r1;
+            }
+        }
+    }
+
     pub fn get_reg16(&self, r: &Reg16) -> u16 {
         let (r0, r1) = match r {
             Reg16::AF => (self.a, self.f),
@@ -119,28 +157,6 @@ impl Registers {
 #[cfg(test)]
 mod test {
     use super::*;
-
-    const REGS: Registers = Registers {
-        a: 0x1,
-        b: 0x2,
-        c: 0x3,
-        d: 0x4,
-        e: 0x5,
-        f: 0x6,
-        h: 0x7,
-        l: 0x8,
-
-        ap: 0x21,
-        bp: 0x22,
-        cp: 0x23,
-        dp: 0x24,
-        ep: 0x25,
-        fp: 0x26,
-        hp: 0x27,
-        lp: 0x28,
-
-        pc: 0x00,
-    };
 
     #[test]
     fn get_flag() {
@@ -222,16 +238,27 @@ mod test {
     }
 
     #[test]
-    fn get_reg16() {
-        assert_eq!(0x0601, REGS.get_reg16(&Reg16::AF));
-        assert_eq!(0x0302, REGS.get_reg16(&Reg16::BC));
-        assert_eq!(0x0504, REGS.get_reg16(&Reg16::DE));
-        assert_eq!(0x0807, REGS.get_reg16(&Reg16::HL));
+    fn get_set_reg16() {
+        let mut regs = Registers::default();
+        regs.set_reg16(&Reg16::AF, 0x0601);
+        regs.set_reg16(&Reg16::BC, 0x0302);
+        regs.set_reg16(&Reg16::DE, 0x0504);
+        regs.set_reg16(&Reg16::HL, 0x0807);
 
-        assert_eq!(0x2621, REGS.get_reg16(&Reg16::AFP));
-        assert_eq!(0x2322, REGS.get_reg16(&Reg16::BCP));
-        assert_eq!(0x2524, REGS.get_reg16(&Reg16::DEP));
-        assert_eq!(0x2827, REGS.get_reg16(&Reg16::HLP));
+        assert_eq!(0x0601, regs.get_reg16(&Reg16::AF));
+        assert_eq!(0x0302, regs.get_reg16(&Reg16::BC));
+        assert_eq!(0x0504, regs.get_reg16(&Reg16::DE));
+        assert_eq!(0x0807, regs.get_reg16(&Reg16::HL));
+
+        regs.set_reg16(&Reg16::AFP, 0x2621);
+        regs.set_reg16(&Reg16::BCP, 0x2322);
+        regs.set_reg16(&Reg16::DEP, 0x2524);
+        regs.set_reg16(&Reg16::HLP, 0x2827);
+
+        assert_eq!(0x2621, regs.get_reg16(&Reg16::AFP));
+        assert_eq!(0x2322, regs.get_reg16(&Reg16::BCP));
+        assert_eq!(0x2524, regs.get_reg16(&Reg16::DEP));
+        assert_eq!(0x2827, regs.get_reg16(&Reg16::HLP));
     }
 
     #[test]
