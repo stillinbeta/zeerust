@@ -43,13 +43,17 @@ pub enum Op {
     SET(u8, Location8), // SET b bit in location
     RES(u8, Location8), // RESet b bit in location
 
-    IN(Location8, Location8),
-    OUT(Location8, Location8),
+    IN(Location8, Location8),  // INput from a peripheral
+    OUT(Location8, Location8), // OUTput to a peripheral
 
-    JP(JumpConditional, Location16),
-    JR(JumpConditional, i8),
-    DJNZ(i8),
+    JP(JumpConditional, Location16), // JumP to the given position
+    JR(JumpConditional, i8),         // Jump to the given Relative position
+    DJNZ(i8),                        // Do a Jump if register b is Non Zero
 
+    POP(Location16),           // Pop an address off of the stack
+    PUSH(Location16),          // Push an address onto a stack
+    LD8(Location8, Location8), // LoaD the given address
+    LD16(Location16, Location16),
     // CALL,
     // CPD,
     // CPDR,
@@ -65,7 +69,6 @@ pub enum Op {
     // INDR,
     // INI,
     // INIR,
-    LD8(Location8, Location8),
     // LDD,
     // LDDR,
     // LDI,
@@ -73,8 +76,6 @@ pub enum Op {
     // OTIR,
     // OUTD,
     // OUTI,
-    // POP,
-    // PUSH,
     // RET,
     // RETI,
     // RETN,
@@ -116,6 +117,10 @@ pub enum Reg16 {
     BCP,
     DEP,
     HLP,
+
+    IX,
+    IY,
+    SP,
 }
 
 #[derive(Debug, PartialEq, Clone)]

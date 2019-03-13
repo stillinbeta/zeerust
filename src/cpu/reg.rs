@@ -21,6 +21,9 @@ pub struct Registers {
     lp: u8,
 
     pc: u16,
+    ix: u16,
+    iy: u16,
+    sp: u16,
 }
 
 impl Registers {
@@ -128,6 +131,9 @@ impl Registers {
                 self.hp = r0;
                 self.lp = r1;
             }
+            Reg16::IX => self.ix = v,
+            Reg16::IY => self.iy = v,
+            Reg16::SP => self.sp = v,
         }
     }
 
@@ -141,6 +147,9 @@ impl Registers {
             Reg16::BCP => (self.bp, self.cp),
             Reg16::DEP => (self.dp, self.ep),
             Reg16::HLP => (self.hp, self.lp),
+            Reg16::IX => return self.ix,
+            Reg16::IY => return self.iy,
+            Reg16::SP => return self.sp,
         };
         (u16::from(r1) << 8) + u16::from(r0)
     }
@@ -244,11 +253,17 @@ mod test {
         regs.set_reg16(&Reg16::BC, 0x0302);
         regs.set_reg16(&Reg16::DE, 0x0504);
         regs.set_reg16(&Reg16::HL, 0x0807);
+        regs.set_reg16(&Reg16::IX, 0xABBA);
+        regs.set_reg16(&Reg16::IY, 0x0BB0);
+        regs.set_reg16(&Reg16::SP, 0x0809);
 
         assert_eq!(0x0601, regs.get_reg16(&Reg16::AF));
         assert_eq!(0x0302, regs.get_reg16(&Reg16::BC));
         assert_eq!(0x0504, regs.get_reg16(&Reg16::DE));
         assert_eq!(0x0807, regs.get_reg16(&Reg16::HL));
+        assert_eq!(0xABBA, regs.get_reg16(&Reg16::IX));
+        assert_eq!(0x0BB0, regs.get_reg16(&Reg16::IY));
+        assert_eq!(0x0809, regs.get_reg16(&Reg16::SP));
 
         regs.set_reg16(&Reg16::AFP, 0x2621);
         regs.set_reg16(&Reg16::BCP, 0x2322);

@@ -1,10 +1,14 @@
 use crate::ops::{JumpConditional, Location16, Location8, Op, Reg16, Reg8};
 
 mod file;
+mod index;
+mod util;
+
 #[cfg(test)]
 mod test;
 
 pub use file::parse_stream;
+use util::*;
 
 pub fn opcode(code: [u8; 4]) -> (Op, usize) {
     match code {
@@ -106,28 +110,6 @@ pub fn opcode(code: [u8; 4]) -> (Op, usize) {
         }
         [0x10, e, _, _] => (Op::DJNZ(e as i8), 2),
 
-        // INC
-        [a, _, _, _] if a & 0b1100_0111 == 0b0000_0100 => (Op::INC(reg_bits(a >> 3)), 1),
-        // DEC
-        [a, _, _, _] if a & 0b1100_0111 == 0b0000_0101 => (Op::DEC(reg_bits(a >> 3)), 1),
-        // Add and Subtract
-        [op, o1, _, _] if op & 0b1010_0000 == 0x80 => {
-            let opr = match op & 0b0001_1000 {
-                0b0000_0000 => Op::ADD8,
-                0b0000_1000 => Op::ADC,
-                0b0001_0000 => Op::SUB8,
-                0b0001_1000 => Op::SBC,
-                _ => unreachable!(),
-            };
-            let (loc, b) = if op & 0b0100_0000 == 0b0100_0000 {
-                // if 6th bit set, immediate
-                (Location8::Immediate(o1), 2)
-            } else {
-                // Otherwise Just a regular bit register
-                (reg_bits(op), 1)
-            };
-            (opr(Location8::Reg(Reg8::A), loc), b)
-        }
         // 8-bit Load
         [op, _, _, _] if op & 0b1100_0000 == 0b0100_0000 => {
             (Op::LD8(reg_bits(op >> 3), reg_bits(op)), 1)
@@ -135,6 +117,14 @@ pub fn opcode(code: [u8; 4]) -> (Op, usize) {
         [op, i, _, _] if op & 0b1100_0111 == 0b0000_0110 => {
             (Op::LD8(reg_bits(op >> 3), Location8::Immediate(i)), 2)
         }
+
+        // 16 bit loads
+        [op, n1, n2, _] if op & 0b1100_1111 == 0b0000_0001 => {
+            (Op::LD16(reg16_bits(op >> 4), le_immediate(n1, n2)), 3)
+        }
+
+        [0xDD, o1, n1, n2] => index::parse(Reg16::IX, o1, n1, n2),
+        [0xFD, o1, n1, n2] => index::parse(Reg16::IY, o1, n1, n2),
 
         // Indirect Loads
         [0x0A, _, _, _] => (
@@ -192,25 +182,33 @@ pub fn opcode(code: [u8; 4]) -> (Op, usize) {
             (opr(loc), b)
         }
 
+        // INC
+        [a, _, _, _] if a & 0b1100_0111 == 0b0000_0100 => (Op::INC(reg_bits(a >> 3)), 1),
+        // DEC
+        [a, _, _, _] if a & 0b1100_0111 == 0b0000_0101 => (Op::DEC(reg_bits(a >> 3)), 1),
+        // Add and Subtract
+        [op, o1, _, _] if op & 0b1010_0000 == 0x80 => {
+            let opr = match op & 0b0001_1000 {
+                0b0000_0000 => Op::ADD8,
+                0b0000_1000 => Op::ADC,
+                0b0001_0000 => Op::SUB8,
+                0b0001_1000 => Op::SBC,
+                _ => unreachable!(),
+            };
+            let (loc, b) = if op & 0b0100_0000 == 0b0100_0000 {
+                // if 6th bit set, immediate
+                (Location8::Immediate(o1), 2)
+            } else {
+                // Otherwise Just a regular bit register
+                (reg_bits(op), 1)
+            };
+            (opr(Location8::Reg(Reg8::A), loc), b)
+        }
+
         // [op, _, _, ]
         [o1, o2, o3, o4] => panic!(
             "Unimplemented opcode [{:02x}, {:02x}, {:02x}, {:02x}]",
             o1, o2, o3, o4
         ),
-    }
-}
-
-// Many instructions use a common bit pattern to designate single registers.
-fn reg_bits(bits: u8) -> Location8 {
-    match bits & 0b111 {
-        0b111 => Location8::Reg(Reg8::A),
-        0b000 => Location8::Reg(Reg8::B),
-        0b001 => Location8::Reg(Reg8::C),
-        0b010 => Location8::Reg(Reg8::D),
-        0b011 => Location8::Reg(Reg8::E),
-        0b100 => Location8::Reg(Reg8::H),
-        0b101 => Location8::Reg(Reg8::L),
-        0b110 => Location8::RegIndirect(Reg16::HL),
-        _ => unreachable!(),
     }
 }

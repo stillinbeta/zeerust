@@ -31,6 +31,9 @@ impl<'a> Z80<'a> {
     fn exec_with_offset(&mut self, op: ops::Op) -> Option<u16> {
         match op {
             ops::Op::LD8(dst, src) => self.set_loc8(&dst, self.get_loc8(&src)),
+            ops::Op::LD16(dst, src) => self.set_loc16(&dst, self.get_loc16(&src)),
+            ops::Op::PUSH(src) => self.push(&src),
+            ops::Op::POP(dst) => self.pop(&dst),
 
             ops::Op::ADD8(dst, src) => self.add(&dst, &src, false),
             ops::Op::ADC(dst, src) => self.add(&dst, &src, true),
@@ -430,7 +433,7 @@ impl<'a> Z80<'a> {
         }
     }
 
-    fn get_loc16(&mut self, loc: &ops::Location16) -> u16 {
+    fn get_loc16(&self, loc: &ops::Location16) -> u16 {
         match loc {
             ops::Location16::Reg(reg) => self.registers.get_reg16(reg),
             ops::Location16::Immediate(n) => *n,
@@ -496,5 +499,25 @@ impl<'a> Z80<'a> {
         } else {
             None
         }
+    }
+
+    fn push(&mut self, src: &ops::Location16) {
+        let [n0, n1] = self.get_loc16(src).to_be_bytes();
+        let mut sp = self.registers.get_reg16(&ops::Reg16::SP);
+        sp -= 1;
+        self.memory.memory[sp as usize] = n0;
+        sp -= 1;
+        self.memory.memory[sp as usize] = n1;
+        self.registers.set_reg16(&ops::Reg16::SP, sp);
+    }
+
+    fn pop(&mut self, dst: &ops::Location16) {
+        let mut sp = self.registers.get_reg16(&ops::Reg16::SP);
+        let n0 = self.memory.memory[sp as usize];
+        sp += 1;
+        let n1 = self.memory.memory[sp as usize];
+        sp += 1;
+        self.set_loc16(dst, u16::from_le_bytes([n0, n1]));
+        self.registers.set_reg16(&ops::Reg16::SP, sp);
     }
 }

@@ -2,7 +2,12 @@ use crate::cpu::opcodes::opcode;
 #[allow(unused_imports)]
 use crate::ops::Op;
 use crate::ops::{
-    JumpConditional::*, Location16::Immediate as I16, Location8::*, Op::*, Reg16::*, Reg8::*,
+    JumpConditional::*,
+    Location16::{Immediate as I16, Reg as R16},
+    Location8::*,
+    Op::*,
+    Reg16::*,
+    Reg8::*,
 };
 
 macro_rules! op4 {
@@ -20,13 +25,13 @@ macro_rules! op4 {
 macro_rules! assert_opcode {
     ($opc : expr, $bytes : expr, $o1 : expr) => {
         let (opc, bytes) = $crate::cpu::opcodes::opcode(op4!($o1));
-        assert_eq!($bytes, bytes, "Opcode {:?} ({:02x})", $opc, $o1);
         assert_eq!($opc, opc, "Opcode {:?} ({:02x})", $opc, $o1);
+        assert_eq!($bytes, bytes, "Opcode {:?} ({:02x})", $opc, $o1);
     };
     ($opc : expr, $bytes : expr, $o1 : expr, $o2 : expr) => {
         let (opc, bytes) = $crate::cpu::opcodes::opcode(op4!($o1, $o2));
-        assert_eq!($bytes, bytes, "Opcode {:?} ({:02x} {:02x})", $opc, $o1, $o2);
         assert_eq!($opc, opc, "Opcode {:?} ({:02x} {:02x})", $opc, $o1, $o2);
+        assert_eq!($bytes, bytes, "Opcode {:?} ({:02x} {:02x})", $opc, $o1, $o2);
     };
     ($opc : expr, $bytes : expr, $o1 : expr, $o2 : expr, $o3 : expr) => {
         let (opc, bytes) = $crate::cpu::opcodes::opcode(op4!($o1, $o2, $o3));
@@ -39,6 +44,19 @@ macro_rules! assert_opcode {
             $bytes, bytes,
             "Opcode {:?} ({:02x} {:02x} {:02x})",
             $opc, $o1, $o2, $o3
+        );
+    };
+    ($opc : expr, $bytes : expr, $o1 : expr, $o2 : expr, $o3 : expr, $o4 : expr) => {
+        let (opc, bytes) = $crate::cpu::opcodes::opcode([$o1, $o2, $o3, $o4]);
+        assert_eq!(
+            $opc, opc,
+            "Opcode {:?} ({:02x} {:02x} {:02x} {:02x})",
+            $opc, $o1, $o2, $o3, $o4,
+        );
+        assert_eq!(
+            $bytes, bytes,
+            "Opcode {:?} ({:02x} {:02x} {:02x} {:02x})",
+            $opc, $o1, $o2, $o3, $o4,
         );
     };
 }
@@ -221,6 +239,17 @@ fn ld_immediate() {
     assert_opcode!(LD8(Reg(H), Immediate(0xFA)), 2, 0x26, 0xFA);
     assert_opcode!(LD8(Reg(L), Immediate(0xCA)), 2, 0x2E, 0xCA);
     assert_opcode!(LD8(RegIndirect(HL), Immediate(0xC7)), 2, 0x36, 0xC7);
+}
+
+#[test]
+fn ld_immediate_16() {
+    assert_opcode!(LD16(R16(BC), I16(0xABBA)), 3, 0x01, 0xBA, 0xAB);
+    assert_opcode!(LD16(R16(DE), I16(0xACC0)), 3, 0x11, 0xC0, 0xAC);
+    assert_opcode!(LD16(R16(HL), I16(0x1337)), 3, 0x21, 0x37, 0x13);
+    assert_opcode!(LD16(R16(SP), I16(0x4004)), 3, 0x31, 0x04, 0x40);
+
+    assert_opcode!(LD16(R16(IX), I16(0x45A2)), 4, 0xDD, 0x21, 0xA2, 0x45);
+    assert_opcode!(LD16(R16(IY), I16(0x45A2)), 4, 0xFD, 0x21, 0xA2, 0x45);
 }
 
 #[test]

@@ -80,6 +80,38 @@ fn ld8_op() {
 }
 
 #[test]
+fn ld16_op() {
+    let mut z80 = Z80::default();
+    z80.exec(Op::LD16(
+        Location16::Reg(Reg16::SP),
+        Location16::Immediate(0xF5C5),
+    ));
+    assert_hex!(0xF5C5, z80.registers.get_reg16(&Reg16::SP))
+}
+
+#[test]
+fn push_op() {
+    let mut z80 = Z80::default();
+    z80.registers.set_reg16(&Reg16::AF, 0x2233);
+    z80.registers.set_reg16(&Reg16::SP, 0x1007);
+    z80.exec(Op::PUSH(Location16::Reg(Reg16::AF)));
+    assert_hex!(0x22, z80.memory.memory[0x1006]);
+    assert_hex!(0x33, z80.memory.memory[0x1005]);
+    assert_hex!(0x1005, z80.registers.get_reg16(&Reg16::SP));
+}
+
+#[test]
+fn pop_op() {
+    let mut z80 = Z80::default();
+    z80.registers.set_reg16(&Reg16::SP, 0x1000);
+    z80.memory.memory[0x1000] = 0x55;
+    z80.memory.memory[0x1001] = 0x33;
+    z80.exec(Op::POP(Location16::Reg(Reg16::HL)));
+    assert_hex!(0x3355, z80.registers.get_reg16(&Reg16::HL));
+    assert_hex!(0x1002, z80.registers.get_reg16(&Reg16::SP));
+}
+
+#[test]
 fn add8_op() {
     let mut z80 = Z80::default();
     z80.registers.set_reg8(Reg8::A, 0x64);
