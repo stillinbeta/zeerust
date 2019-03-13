@@ -2,7 +2,7 @@ extern crate zeerust;
 
 use zeerust::z80;
 
-const HELLO_ZEERUST: &'static [u8] = include_bytes!("zeerust.bin");
+const HELLO_ZEERUST: &[u8] = include_bytes!("zeerust.bin");
 
 #[test]
 fn hello_zeerust() {
@@ -12,8 +12,5 @@ fn hello_zeerust() {
 
     z80.run(HELLO_ZEERUST);
 
-    assert_eq!(
-        vec!('Z' as u8, 'E' as u8, 'E' as u8, 'R' as u8, 'U' as u8, 'S' as u8, 'T' as u8,),
-        buf.result()
-    );
+    assert_eq!(vec!(b'Z', b'E', b'E', b'R', b'U', b'S', b'T'), buf.result());
 }
