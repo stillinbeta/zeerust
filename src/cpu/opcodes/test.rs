@@ -1,7 +1,9 @@
 use crate::cpu::opcodes::opcode;
 #[allow(unused_imports)]
 use crate::ops::Op;
-use crate::ops::{Location8::*, Op::*, Reg16::*, Reg8::*};
+use crate::ops::{
+    JumpConditional::*, Location16::Immediate as I16, Location8::*, Op::*, Reg16::*, Reg8::*,
+};
 
 macro_rules! op4 {
     ($o1 : expr) => {
@@ -29,12 +31,12 @@ macro_rules! assert_opcode {
     ($opc : expr, $bytes : expr, $o1 : expr, $o2 : expr, $o3 : expr) => {
         let (opc, bytes) = $crate::cpu::opcodes::opcode(op4!($o1, $o2, $o3));
         assert_eq!(
-            $bytes, bytes,
+            $opc, opc,
             "Opcode {:?} ({:02x} {:02x} {:02x})",
             $opc, $o1, $o2, $o3
         );
         assert_eq!(
-            $opc, opc,
+            $bytes, bytes,
             "Opcode {:?} ({:02x} {:02x} {:02x})",
             $opc, $o1, $o2, $o3
         );
@@ -698,4 +700,37 @@ fn output() {
 #[should_panic(expected = "Unknown ExtendeD operation")]
 fn output_hl() {
     opcode(op4!(0xED, 0x71));
+}
+
+#[test]
+fn jp() {
+    assert_opcode!(JP(Unconditional, I16(0xABBA)), 3, 0xC3, 0xBA, 0xAB);
+
+    assert_opcode!(JP(NonZero, I16(0xBAB0)), 3, 0xC2, 0xB0, 0xBA);
+    assert_opcode!(JP(Zero, I16(0xC01E)), 3, 0xCA, 0x1E, 0xC0);
+
+    assert_opcode!(JP(NoCarry, I16(0xBAB0)), 3, 0xD2, 0xB0, 0xBA);
+    assert_opcode!(JP(Carry, I16(0xC01E)), 3, 0xDA, 0x1E, 0xC0);
+
+    assert_opcode!(JP(ParityOdd, I16(0xBAB0)), 3, 0xE2, 0xB0, 0xBA);
+    assert_opcode!(JP(ParityEven, I16(0xC01E)), 3, 0xEA, 0x1E, 0xC0);
+
+    assert_opcode!(JP(SignPositive, I16(0xC01E)), 3, 0xF2, 0x1E, 0xC0);
+    assert_opcode!(JP(SignNegative, I16(0xBAB0)), 3, 0xFA, 0xB0, 0xBA);
+}
+
+#[test]
+fn jr() {
+    assert_opcode!(JR(Unconditional, -128), 2, 0x18, 0x80);
+
+    assert_opcode!(JR(NonZero, 127), 2, 0x20, 0x7F);
+    assert_opcode!(JR(Zero, 16), 2, 0x28, 0x10);
+
+    assert_opcode!(JR(NoCarry, -1), 2, 0x30, 0xFF);
+    assert_opcode!(JR(Carry, -127), 2, 0x38, 0x81);
+}
+
+#[test]
+fn djnz() {
+    assert_opcode!(DJNZ(-10), 2, 0x10, 0xF6);
 }

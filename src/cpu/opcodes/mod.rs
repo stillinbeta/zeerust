@@ -1,4 +1,4 @@
-use crate::ops::{Location8, Op, Reg16, Reg8};
+use crate::ops::{JumpConditional, Location16, Location8, Op, Reg16, Reg8};
 
 mod file;
 #[cfg(test)]
@@ -66,6 +66,45 @@ pub fn opcode(code: [u8; 4]) -> (Op, usize) {
                 panic!("Unknown IN operation")
             }
         }
+
+        // Jump
+        [0xC3, n1, n2, _] => (
+            Op::JP(
+                JumpConditional::Unconditional,
+                Location16::Immediate(u16::from_le_bytes([n1, n2])),
+            ),
+            3,
+        ),
+        [op, n1, n2, _] if op & 0b1100_0111 == 0b1100_0010 => {
+            let jc = match (op >> 3) & 0b111 {
+                0b000 => JumpConditional::NonZero,
+                0b001 => JumpConditional::Zero,
+                0b010 => JumpConditional::NoCarry,
+                0b011 => JumpConditional::Carry,
+                0b100 => JumpConditional::ParityOdd,
+                0b101 => JumpConditional::ParityEven,
+                0b110 => JumpConditional::SignPositive,
+                0b111 => JumpConditional::SignNegative,
+                _ => unreachable!(),
+            };
+            (
+                Op::JP(jc, Location16::Immediate(u16::from_le_bytes([n1, n2]))),
+                3,
+            )
+        }
+        // Jump Relative
+        [0x18, e, _, _] => (Op::JR(JumpConditional::Unconditional, e as i8), 2),
+        [op, e, _, _] if op & 0b1110_0111 == 0b0010_0000 => {
+            let jc = match op >> 3 & 0b11 {
+                0b00 => JumpConditional::NonZero,
+                0b01 => JumpConditional::Zero,
+                0b10 => JumpConditional::NoCarry,
+                0b11 => JumpConditional::Carry,
+                _ => unreachable!(),
+            };
+            (Op::JR(jc, e as i8), 2)
+        }
+        [0x10, e, _, _] => (Op::DJNZ(e as i8), 2),
 
         // INC
         [a, _, _, _] if a & 0b1100_0111 == 0b0000_0100 => (Op::INC(reg_bits(a >> 3)), 1),
