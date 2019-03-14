@@ -253,7 +253,7 @@ fn ld_immediate_16() {
 }
 
 #[test]
-fn ld_immediate_indirect_16() {
+fn ld_from_immediate_indirect_16() {
     assert_opcode!(LD16(R16(BC), II16(0x2130)), 4, 0xED, 0x4B, 0x30, 0x21);
     assert_opcode!(LD16(R16(DE), II16(0x2131)), 4, 0xED, 0x5B, 0x31, 0x21);
     assert_opcode!(LD16(R16(HL), II16(0x2132)), 4, 0xED, 0x6B, 0x32, 0x21);
@@ -263,7 +263,10 @@ fn ld_immediate_indirect_16() {
 
     assert_opcode!(LD16(R16(IX), II16(0x2533)), 4, 0xDD, 0x2A, 0x33, 0x25);
     assert_opcode!(LD16(R16(IY), II16(0x2534)), 4, 0xFD, 0x2A, 0x34, 0x25);
+}
 
+#[test]
+fn ld_to_immediate_indirect_16() {
     assert_opcode!(LD16(II16(0x2130), R16(BC)), 4, 0xED, 0x43, 0x30, 0x21);
     assert_opcode!(LD16(II16(0x2131), R16(DE)), 4, 0xED, 0x53, 0x31, 0x21);
     assert_opcode!(LD16(II16(0x2132), R16(HL)), 4, 0xED, 0x63, 0x32, 0x21);
