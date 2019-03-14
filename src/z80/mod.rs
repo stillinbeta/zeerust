@@ -83,6 +83,8 @@ impl<'a> Z80<'a> {
             ops::Op::JP(cond, addr) => return self.jump_cond(cond, &addr),
             ops::Op::JR(cond, offset) => return self.jump_relative(cond, offset),
             ops::Op::DJNZ(offset) => return self.decrement_jump(offset),
+            ops::Op::CALL(cond, addr) => return self.call(cond, addr),
+            ops::Op::RET(cond) => return self.return_(cond),
         };
         None
     }
@@ -509,8 +511,8 @@ impl<'a> Z80<'a> {
         }
     }
 
-    fn push(&mut self, src: &ops::Location16) {
-        let [n0, n1] = self.get_loc16(src).to_be_bytes();
+    fn push_val(&mut self, val: u16) {
+        let [n0, n1] = val.to_be_bytes();
         let mut sp = self.registers.get_reg16(&ops::Reg16::SP);
         sp -= 1;
         self.memory.memory[sp as usize] = n0;
@@ -519,13 +521,39 @@ impl<'a> Z80<'a> {
         self.registers.set_reg16(&ops::Reg16::SP, sp);
     }
 
-    fn pop(&mut self, dst: &ops::Location16) {
+    fn push(&mut self, src: &ops::Location16) {
+        self.push_val(self.get_loc16(src));
+    }
+
+    fn pop_val(&mut self) -> u16 {
         let mut sp = self.registers.get_reg16(&ops::Reg16::SP);
         let n0 = self.memory.memory[sp as usize];
         sp += 1;
         let n1 = self.memory.memory[sp as usize];
         sp += 1;
-        self.set_loc16(dst, u16::from_le_bytes([n0, n1]));
         self.registers.set_reg16(&ops::Reg16::SP, sp);
+        u16::from_le_bytes([n0, n1])
+    }
+
+    fn pop(&mut self, dst: &ops::Location16) {
+        let val = self.pop_val();
+        self.set_loc16(dst, val);
+    }
+
+    fn call(&mut self, cond: ops::JumpConditional, loc: u16) -> Option<u16> {
+        if self.eval_cond(cond) {
+            self.push_val(self.registers.get_pc());
+            Some(loc)
+        } else {
+            None
+        }
+    }
+
+    fn return_(&mut self, cond: ops::JumpConditional) -> Option<u16> {
+        if self.eval_cond(cond) {
+            Some(self.pop_val())
+        } else {
+            None
+        }
     }
 }

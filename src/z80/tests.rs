@@ -950,3 +950,74 @@ fn djnz() {
     assert_eq!(None, z80.exec_with_offset(Op::DJNZ(-52)));
     assert_eq!(0, z80.registers.get_reg8(Reg8::B));
 }
+
+#[test]
+fn call() {
+    let mut z80 = Z80::default();
+    z80.registers.set_pc(0x1A47);
+    z80.registers.set_reg16(&Reg16::SP, 0x3002);
+    assert_eq!(
+        Some(0x2135),
+        z80.exec_with_offset(Op::CALL(JumpConditional::Unconditional, 0x2135)),
+    );
+
+    assert_eq!(0x47, z80.memory.memory[0x3000]);
+    assert_eq!(0x1A, z80.memory.memory[0x3001]);
+    assert_eq!(0x3000, z80.registers.get_reg16(&Reg16::SP));
+}
+
+#[test]
+fn call_cond_zero() {
+    let mut z80 = Z80::default();
+    z80.registers.set_pc(0x1A47);
+    z80.registers.set_reg16(&Reg16::SP, 0x3002);
+
+    z80.registers.set_flag(&StatusFlag::Zero, true);
+
+    let op1 = Op::CALL(JumpConditional::Zero, 0x2135);
+    let op2 = Op::CALL(JumpConditional::NonZero, 0x2135);
+    assert_eq!(0x3002, z80.registers.get_reg16(&Reg16::SP));
+    assert_eq!(None, z80.exec_with_offset(op2));
+    assert_eq!(Some(0x2135), z80.exec_with_offset(op1));
+
+    assert_eq!(0x47, z80.memory.memory[0x3000]);
+    assert_eq!(0x1A, z80.memory.memory[0x3001]);
+    assert_eq!(0x3000, z80.registers.get_reg16(&Reg16::SP));
+
+    // Not testing the other states, well covered by the JP tests
+}
+
+#[test]
+fn ret() {
+    let mut z80 = Z80::default();
+    z80.registers.set_pc(0x3535);
+    z80.registers.set_reg16(&Reg16::SP, 0x2000);
+    z80.memory.memory[0x2000] = 0xB5;
+    z80.memory.memory[0x2001] = 0x18;
+    assert_eq!(
+        Some(0x18B5),
+        z80.exec_with_offset(Op::RET(JumpConditional::Unconditional)),
+    );
+    assert_eq!(0x2002, z80.registers.get_reg16(&Reg16::SP));
+}
+
+#[test]
+fn call_cond_carry() {
+    let mut z80 = Z80::default();
+    z80.registers.set_pc(0x1A47);
+    z80.registers.set_reg16(&Reg16::SP, 0x2000);
+
+    z80.registers.set_flag(&StatusFlag::Carry, true);
+    z80.memory.memory[0x2000] = 0xB5;
+    z80.memory.memory[0x2001] = 0x18;
+
+    let op1 = Op::RET(JumpConditional::Carry);
+    let op2 = Op::RET(JumpConditional::NoCarry);
+    assert_eq!(None, z80.exec_with_offset(op2));
+    assert_eq!(0x2000, z80.registers.get_reg16(&Reg16::SP));
+
+    assert_eq!(Some(0x18B5), z80.exec_with_offset(op1));
+    assert_eq!(0x2002, z80.registers.get_reg16(&Reg16::SP));
+
+    // Not testing the other states, well covered by the JP tests
+}

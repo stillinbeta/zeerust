@@ -49,6 +49,8 @@ pub enum Op {
     JP(JumpConditional, Location16), // JumP to the given position
     JR(JumpConditional, i8),         // Jump to the given Relative position
     DJNZ(i8),                        // Do a Jump if register b is Non Zero
+    CALL(JumpConditional, u16),      // CALL a method
+    RET(JumpConditional),
 
     POP(Location16),           // Pop an address off of the stack
     PUSH(Location16),          // Push an address onto a stack
