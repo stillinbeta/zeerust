@@ -437,14 +437,22 @@ impl<'a> Z80<'a> {
         match loc {
             ops::Location16::Reg(reg) => self.registers.get_reg16(reg),
             ops::Location16::Immediate(n) => *n,
+            ops::Location16::ImmediateIndirect(n) => u16::from_le_bytes([
+                self.memory.memory[*n as usize],
+                self.memory.memory[(*n + 1) as usize],
+            ]),
         }
     }
 
-    #[allow(dead_code)] // used by tests
     fn set_loc16(&mut self, loc: &ops::Location16, v: u16) {
         match loc {
             ops::Location16::Immediate(_) => panic!("Attempting to set immediate value!"),
             ops::Location16::Reg(reg) => self.registers.set_reg16(reg, v),
+            ops::Location16::ImmediateIndirect(n) => {
+                let [n1, n2] = v.to_le_bytes();
+                self.memory.memory[*n as usize] = n1;
+                self.memory.memory[(*n + 1) as usize] = n2;
+            }
         }
     }
 

@@ -3,7 +3,7 @@ use crate::cpu::opcodes::opcode;
 use crate::ops::Op;
 use crate::ops::{
     JumpConditional::*,
-    Location16::{Immediate as I16, Reg as R16},
+    Location16::{Immediate as I16, ImmediateIndirect as II16, Reg as R16},
     Location8::*,
     Op::*,
     Reg16::*,
@@ -250,6 +250,36 @@ fn ld_immediate_16() {
 
     assert_opcode!(LD16(R16(IX), I16(0x45A2)), 4, 0xDD, 0x21, 0xA2, 0x45);
     assert_opcode!(LD16(R16(IY), I16(0x45A2)), 4, 0xFD, 0x21, 0xA2, 0x45);
+}
+
+#[test]
+fn ld_immediate_indirect_16() {
+    assert_opcode!(LD16(R16(BC), II16(0x2130)), 4, 0xED, 0x4B, 0x30, 0x21);
+    assert_opcode!(LD16(R16(DE), II16(0x2131)), 4, 0xED, 0x5B, 0x31, 0x21);
+    assert_opcode!(LD16(R16(HL), II16(0x2132)), 4, 0xED, 0x6B, 0x32, 0x21);
+    // Alternate
+    assert_opcode!(LD16(R16(HL), II16(0x2132)), 3, 0x2A, 0x32, 0x21);
+    assert_opcode!(LD16(R16(SP), II16(0x2132)), 4, 0xED, 0x7B, 0x32, 0x21);
+
+    assert_opcode!(LD16(R16(IX), II16(0x2533)), 4, 0xDD, 0x2A, 0x33, 0x25);
+    assert_opcode!(LD16(R16(IY), II16(0x2534)), 4, 0xFD, 0x2A, 0x34, 0x25);
+
+    assert_opcode!(LD16(II16(0x2130), R16(BC)), 4, 0xED, 0x43, 0x30, 0x21);
+    assert_opcode!(LD16(II16(0x2131), R16(DE)), 4, 0xED, 0x53, 0x31, 0x21);
+    assert_opcode!(LD16(II16(0x2132), R16(HL)), 4, 0xED, 0x63, 0x32, 0x21);
+    // Alternate
+    assert_opcode!(LD16(II16(0x2132), R16(HL)), 3, 0x22, 0x32, 0x21);
+    assert_opcode!(LD16(II16(0x2132), R16(SP)), 4, 0xED, 0x73, 0x32, 0x21);
+
+    assert_opcode!(LD16(II16(0x2533), R16(IX)), 4, 0xDD, 0x22, 0x33, 0x25);
+    assert_opcode!(LD16(II16(0x2534), R16(IY)), 4, 0xFD, 0x22, 0x34, 0x25);
+}
+
+#[test]
+fn ld_sp() {
+    assert_opcode!(LD16(R16(SP), R16(HL)), 1, 0xF9);
+    assert_opcode!(LD16(R16(SP), R16(IX)), 2, 0xDD, 0xF9);
+    assert_opcode!(LD16(R16(SP), R16(IY)), 2, 0xFD, 0xF9);
 }
 
 #[test]
@@ -762,4 +792,26 @@ fn jr() {
 #[test]
 fn djnz() {
     assert_opcode!(DJNZ(-10), 2, 0x10, 0xF6);
+}
+
+#[test]
+fn push() {
+    assert_opcode!(PUSH(R16(BC)), 1, 0xC5);
+    assert_opcode!(PUSH(R16(DE)), 1, 0xD5);
+    assert_opcode!(PUSH(R16(HL)), 1, 0xE5);
+    assert_opcode!(PUSH(R16(AF)), 1, 0xF5);
+
+    assert_opcode!(PUSH(R16(IX)), 2, 0xDD, 0xE5);
+    assert_opcode!(PUSH(R16(IY)), 2, 0xFD, 0xE5);
+}
+
+#[test]
+fn pop() {
+    assert_opcode!(POP(R16(BC)), 1, 0xC1);
+    assert_opcode!(POP(R16(DE)), 1, 0xD1);
+    assert_opcode!(POP(R16(HL)), 1, 0xE1);
+    assert_opcode!(POP(R16(AF)), 1, 0xF1);
+
+    assert_opcode!(POP(R16(IX)), 2, 0xDD, 0xE1);
+    assert_opcode!(POP(R16(IY)), 2, 0xFD, 0xE1);
 }

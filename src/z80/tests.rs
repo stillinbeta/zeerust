@@ -24,6 +24,13 @@ fn get_loc16() {
 
     assert_hex!(0x0DCC, z80.get_loc16(&Location16::Reg(Reg16::HL)));
     assert_hex!(0xF0C5, z80.get_loc16(&Location16::Immediate(0xF0C5)));
+
+    z80.memory.memory[0x0545] = 0x37;
+    z80.memory.memory[0x0546] = 0xA1;
+    assert_hex!(
+        0xa137,
+        z80.get_loc16(&Location16::ImmediateIndirect(0x0545))
+    );
 }
 
 #[test]
@@ -70,6 +77,10 @@ fn set_loc16() {
     let mut z80 = Z80::default();
     z80.set_loc16(&Location16::Reg(Reg16::DE), 0xDDEE);
     assert_hex!(0xDDEE, z80.registers.get_reg16(&Reg16::DE));
+
+    z80.set_loc16(&Location16::ImmediateIndirect(0x1000), 0x4644);
+    assert_hex!(0x44, z80.memory.memory[0x1000]);
+    assert_hex!(0x46, z80.memory.memory[0x1001]);
 }
 
 #[test]
@@ -86,7 +97,15 @@ fn ld16_op() {
         Location16::Reg(Reg16::SP),
         Location16::Immediate(0xF5C5),
     ));
-    assert_hex!(0xF5C5, z80.registers.get_reg16(&Reg16::SP))
+    assert_hex!(0xF5C5, z80.registers.get_reg16(&Reg16::SP));
+    z80.memory.memory[0x2130] = 0x65;
+    z80.memory.memory[0x2131] = 0x78;
+
+    z80.exec(Op::LD16(
+        Location16::Reg(Reg16::BC),
+        Location16::ImmediateIndirect(0x2130),
+    ));
+    assert_hex!(0x7865, z80.registers.get_reg16(&Reg16::BC));
 }
 
 #[test]

@@ -123,6 +123,28 @@ pub fn opcode(code: [u8; 4]) -> (Op, usize) {
             (Op::LD16(reg16_bits(op >> 4), le_immediate(n1, n2)), 3)
         }
 
+        [0x2A, n1, n2, _] => (
+            Op::LD16(Location16::Reg(Reg16::HL), le_imm_indir(n1, n2)),
+            3,
+        ),
+        [0xED, op, n1, n2] if op & 0b1100_1111 == 0b0100_1011 => {
+            (Op::LD16(reg16_bits(op >> 4), le_imm_indir(n1, n2)), 4)
+        }
+
+        [0x22, n1, n2, _] => (
+            Op::LD16(le_imm_indir(n1, n2), Location16::Reg(Reg16::HL)),
+            3,
+        ),
+        [0xED, op, n1, n2] if op & 0b1100_1111 == 0b0100_0011 => {
+            (Op::LD16(le_imm_indir(n1, n2), reg16_bits(op >> 4)), 4)
+        }
+        [0xF9, _, _, _] => (
+            Op::LD16(Location16::Reg(Reg16::SP), Location16::Reg(Reg16::HL)),
+            1,
+        ),
+
+        [op, _, _, _] if op & 0b1100_1111 == 0b1100_0101 => (Op::PUSH(reg16_bits_af(op >> 4)), 1),
+        [op, _, _, _] if op & 0b1100_1111 == 0b1100_0001 => (Op::POP(reg16_bits_af(op >> 4)), 1),
         [0xDD, o1, n1, n2] => index::parse(Reg16::IX, o1, n1, n2),
         [0xFD, o1, n1, n2] => index::parse(Reg16::IY, o1, n1, n2),
 

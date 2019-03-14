@@ -136,6 +136,7 @@ pub enum Location16 {
     Reg(Reg16),
     // RegIndirect(Reg16), // Is this used anywhere?
     Immediate(u16),
+    ImmediateIndirect(u16),
 }
 
 #[derive(Debug, PartialEq, Clone)]

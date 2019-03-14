@@ -25,6 +25,21 @@ pub fn reg16_bits(bits: u8) -> Location16 {
     }
 }
 
+// PUSH and POP use a slightly different bit pattern
+pub fn reg16_bits_af(bits: u8) -> Location16 {
+    match bits & 0b11 {
+        0b00 => Location16::Reg(Reg16::BC),
+        0b01 => Location16::Reg(Reg16::DE),
+        0b10 => Location16::Reg(Reg16::HL),
+        0b11 => Location16::Reg(Reg16::AF),
+        _ => unreachable!(),
+    }
+}
+
 pub fn le_immediate(n0: u8, n1: u8) -> Location16 {
     Location16::Immediate(u16::from_le_bytes([n0, n1]))
+}
+
+pub fn le_imm_indir(n0: u8, n1: u8) -> Location16 {
+    Location16::ImmediateIndirect(u16::from_le_bytes([n0, n1]))
 }
