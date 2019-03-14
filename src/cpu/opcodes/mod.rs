@@ -1,5 +1,6 @@
 use crate::ops::{JumpConditional, Location16, Location8, Op, Reg16, Reg8};
 
+mod bits;
 mod file;
 mod index;
 mod util;
@@ -23,32 +24,7 @@ pub fn opcode(code: [u8; 4]) -> (Op, usize) {
         [0xED, 0x67, _, _] => (Op::RRD, 2),
         [0xED, 0x6F, _, _] => (Op::RLD, 2),
         // Bits are all 0xCB
-        [0xCB, op, _, _] => {
-            let loc = reg_bits(op);
-            let opr = match op >> 6 {
-                0b00 => {
-                    let opr = match op >> 3 {
-                        0b000 => Op::RLC,
-                        0b001 => Op::RRC,
-                        0b010 => Op::RL,
-                        0b011 => Op::RR,
-                        0b100 => Op::SLA,
-                        0b101 => Op::SRA,
-                        // http://z80-heaven.wikidot.com/instructions-set:sll
-                        0b110 => panic!("Use of undocumented instruction SLL"),
-                        0b111 => Op::SRL,
-                        _ => unreachable!(),
-                    };
-                    return (opr(loc), 2);
-                }
-                0b01 => Op::BIT,
-                0b10 => Op::RES,
-                0b11 => Op::SET,
-                _ => unreachable!(),
-            };
-            let reg = (op >> 3) & 0b111;
-            (opr(reg, loc), 2)
-        }
+        [0xCB, op, _, _] => bits::parse(op),
 
         // Input/Output
         [0xDB, n, _, _] => (Op::IN(Location8::Reg(Reg8::A), Location8::Immediate(n)), 2),
