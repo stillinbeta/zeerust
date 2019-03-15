@@ -1,4 +1,4 @@
-const MEMORY_SIZE: usize = 16 * 1024; // 16 kibibytes
+pub const MEMORY_SIZE: usize = 16 * 1024; // 16 kibibytes
 
 pub struct Memory {
     pub memory: [u8; MEMORY_SIZE],

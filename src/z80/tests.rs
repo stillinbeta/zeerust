@@ -961,7 +961,7 @@ fn call() {
         z80.exec_with_offset(Op::CALL(JumpConditional::Unconditional, 0x2135)),
     );
 
-    assert_eq!(0x47, z80.memory.memory[0x3000]);
+    assert_eq!(0x4A, z80.memory.memory[0x3000]);
     assert_eq!(0x1A, z80.memory.memory[0x3001]);
     assert_eq!(0x3000, z80.registers.get_reg16(&Reg16::SP));
 }
@@ -980,7 +980,7 @@ fn call_cond_zero() {
     assert_eq!(None, z80.exec_with_offset(op2));
     assert_eq!(Some(0x2135), z80.exec_with_offset(op1));
 
-    assert_eq!(0x47, z80.memory.memory[0x3000]);
+    assert_eq!(0x4A, z80.memory.memory[0x3000]);
     assert_eq!(0x1A, z80.memory.memory[0x3001]);
     assert_eq!(0x3000, z80.registers.get_reg16(&Reg16::SP));
 

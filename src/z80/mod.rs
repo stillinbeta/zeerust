@@ -8,7 +8,6 @@ mod run;
 #[cfg(test)]
 mod tests;
 
-#[derive(Default)]
 pub struct Z80<'a> {
     registers: cpu::reg::Registers,
     memory: cpu::mem::Memory,
@@ -17,6 +16,21 @@ pub struct Z80<'a> {
 
     input_devices: HashMap<u8, &'a io::InputDevice>,
     output_devices: HashMap<u8, &'a io::OutputDevice>,
+}
+
+impl<'a> Default for Z80<'a> {
+    fn default() -> Self {
+        let mut registers = cpu::reg::Registers::default();
+        registers.set_reg16(&ops::Reg16::SP, cpu::mem::MEMORY_SIZE as u16);
+        Self {
+            registers,
+            memory: cpu::mem::Memory::default(),
+
+            is_halted: false,
+            input_devices: HashMap::new(),
+            output_devices: HashMap::new(),
+        }
+    }
 }
 
 impl<'a> Z80<'a> {
@@ -542,7 +556,7 @@ impl<'a> Z80<'a> {
 
     fn call(&mut self, cond: ops::JumpConditional, loc: u16) -> Option<u16> {
         if self.eval_cond(cond) {
-            self.push_val(self.registers.get_pc());
+            self.push_val(self.registers.get_pc() + 3); // All CALL instructions are 3 bytes
             Some(loc)
         } else {
             None
