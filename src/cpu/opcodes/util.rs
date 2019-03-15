@@ -1,4 +1,4 @@
-use crate::ops::{Location16, Location8, Reg16, Reg8};
+use crate::ops::{JumpConditional, Location16, Location8, Reg16, Reg8};
 
 // Many instructions use a common bit pattern to designate single registers.
 pub fn reg_bits(bits: u8) -> Location8 {
@@ -42,4 +42,18 @@ pub fn le_immediate(n0: u8, n1: u8) -> Location16 {
 
 pub fn le_imm_indir(n0: u8, n1: u8) -> Location16 {
     Location16::ImmediateIndirect(u16::from_le_bytes([n0, n1]))
+}
+
+pub fn jump_conditional(c: u8) -> JumpConditional {
+    match c & 0b111 {
+        0b000 => JumpConditional::NonZero,
+        0b001 => JumpConditional::Zero,
+        0b010 => JumpConditional::NoCarry,
+        0b011 => JumpConditional::Carry,
+        0b100 => JumpConditional::ParityOdd,
+        0b101 => JumpConditional::ParityEven,
+        0b110 => JumpConditional::SignPositive,
+        0b111 => JumpConditional::SignNegative,
+        _ => unreachable!(),
+    }
 }

@@ -55,23 +55,13 @@ pub fn opcode(code: [u8; 4]) -> (Op, usize) {
             ),
             3,
         ),
-        [op, n1, n2, _] if op & 0b1100_0111 == 0b1100_0010 => {
-            let jc = match (op >> 3) & 0b111 {
-                0b000 => JumpConditional::NonZero,
-                0b001 => JumpConditional::Zero,
-                0b010 => JumpConditional::NoCarry,
-                0b011 => JumpConditional::Carry,
-                0b100 => JumpConditional::ParityOdd,
-                0b101 => JumpConditional::ParityEven,
-                0b110 => JumpConditional::SignPositive,
-                0b111 => JumpConditional::SignNegative,
-                _ => unreachable!(),
-            };
-            (
-                Op::JP(jc, Location16::Immediate(u16::from_le_bytes([n1, n2]))),
-                3,
-            )
-        }
+        [op, n1, n2, _] if op & 0b1100_0111 == 0b1100_0010 => (
+            Op::JP(
+                jump_conditional(op >> 3),
+                Location16::Immediate(u16::from_le_bytes([n1, n2])),
+            ),
+            3,
+        ),
         // Jump Relative
         [0x18, e, _, _] => (Op::JR(JumpConditional::Unconditional, e as i8), 2),
         [op, e, _, _] if op & 0b1110_0111 == 0b0010_0000 => {
@@ -85,6 +75,18 @@ pub fn opcode(code: [u8; 4]) -> (Op, usize) {
             (Op::JR(jc, e as i8), 2)
         }
         [0x10, e, _, _] => (Op::DJNZ(e as i8), 2),
+
+        [0xCD, n1, n2, _] => (
+            Op::CALL(JumpConditional::Unconditional, u16::from_le_bytes([n1, n2])),
+            3,
+        ),
+        [op, n1, n2, _] if op & 0b1100_0111 == 0b1100_0100 => (
+            Op::CALL(jump_conditional(op >> 3), u16::from_le_bytes([n1, n2])),
+            3,
+        ),
+
+        [0xC9, _, _, _] => (Op::RET(JumpConditional::Unconditional), 1),
+        [op, _, _, _] if op & 0b1100_0111 == 0b1100_0000 => (Op::RET(jump_conditional(op >> 3)), 1),
 
         // 8-bit Load
         [op, _, _, _] if op & 0b1100_0000 == 0b0100_0000 => {

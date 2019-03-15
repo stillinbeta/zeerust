@@ -818,3 +818,31 @@ fn pop() {
     assert_opcode!(POP(R16(IX)), 2, 0xDD, 0xE1);
     assert_opcode!(POP(R16(IY)), 2, 0xFD, 0xE1);
 }
+
+#[test]
+fn call() {
+    assert_opcode!(CALL(Unconditional, 0xD37A), 3, 0xCD, 0x7A, 0xD3);
+
+    assert_opcode!(CALL(NonZero, 0x878B), 3, 0xC4, 0x8B, 0x87);
+    assert_opcode!(CALL(Zero, 0xABBA), 3, 0xCC, 0xBA, 0xAB);
+    assert_opcode!(CALL(NoCarry, 0x878B), 3, 0xD4, 0x8B, 0x87);
+    assert_opcode!(CALL(Carry, 0xABBA), 3, 0xDC, 0xBA, 0xAB);
+    assert_opcode!(CALL(ParityOdd, 0x878B), 3, 0xE4, 0x8B, 0x87);
+    assert_opcode!(CALL(ParityEven, 0xABBA), 3, 0xEC, 0xBA, 0xAB);
+    assert_opcode!(CALL(SignPositive, 0x878B), 3, 0xF4, 0x8B, 0x87);
+    assert_opcode!(CALL(SignNegative, 0xABBA), 3, 0xFC, 0xBA, 0xAB);
+}
+
+#[test]
+fn ret() {
+    assert_opcode!(RET(Unconditional), 1, 0xC9, 0x7A, 0xD3);
+
+    assert_opcode!(RET(NonZero), 1, 0xC0);
+    assert_opcode!(RET(Zero), 1, 0xC8);
+    assert_opcode!(RET(NoCarry), 1, 0xD0);
+    assert_opcode!(RET(Carry), 1, 0xD8);
+    assert_opcode!(RET(ParityOdd), 1, 0xE0);
+    assert_opcode!(RET(ParityEven), 1, 0xE8);
+    assert_opcode!(RET(SignPositive), 1, 0xF0);
+    assert_opcode!(RET(SignNegative), 1, 0xF8);
+}
