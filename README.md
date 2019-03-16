@@ -1,4 +1,4 @@
-[![Build Status](https://travis-ci.org/stillinbeta/zeerust.svg?branch=master)](https://travis-ci.org/stillinbeta/zeerust)
+[![Build Status](https://travis-ci.org/stillinbeta/zeerust.svg?branch=master)](https://travis-ci.org/stillinbeta/zeerust) [![codecov](https://codecov.io/gh/stillinbeta/zeerust/branch/master/graph/badge.svg)](https://codecov.io/gh/stillinbeta/zeerust)
 
 # Zeerust
 
