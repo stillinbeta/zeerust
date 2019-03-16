@@ -4,7 +4,19 @@ version = "0.1.0"
 authors = ["Ellie Frost <web@stillinbeta.com>"]
 edition = "2018"
 
+description = "A Z80 CPU Emulator"
+repository = "https://github.com/stillinbeta/zeerust"
+license = "Apache-2.0"
+keywords = ["z80", "assembly", "emulator", "ti83", "zxspectrum"]
+categories = ["emulators"]
+
+
 [dependencies]
 log = "0.4"
 stderrlog = "0.4"
+
+[badges]
+travis-ci = { repository = "stillinbeta/zeerust" }
+codecov = { repository = "stillinbeta/zeerust" }
+
 
