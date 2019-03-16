@@ -502,7 +502,10 @@ impl<'a> Z80<'a> {
     }
 
     fn pc_offset(&self, offset: i8) -> u16 {
-        self.registers.get_pc().wrapping_add(offset as u16) + 2
+        self.registers
+            .get_pc()
+            .wrapping_add(offset as u16)
+            .wrapping_add(2)
     }
 
     fn jump_relative(&mut self, cond: ops::JumpConditional, offset: i8) -> Option<u16> {

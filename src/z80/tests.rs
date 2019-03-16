@@ -223,6 +223,22 @@ fn sub8_op() {
         AddSubtract = true,
         Carry = true,
     );
+
+    z80.registers.set_reg8(Reg8::A, 0x0A); // 10
+    z80.exec(Op::SUB8(
+        Location8::Reg(Reg8::A),
+        Location8::Immediate(0x0B), // 11
+    ));
+    assert_bin!((0xFF) as u8, z80.registers.get_reg8(Reg8::A)); // -1
+    assert_flags!(
+        z80.registers,
+        Sign = true,
+        Zero = false,
+        HalfCarry = true,
+        ParityOverflow = true,
+        AddSubtract = true,
+        Carry = true,
+    );
 }
 
 #[test]
@@ -949,6 +965,12 @@ fn djnz() {
     assert_eq!(Some(0xAB00), z80.exec_with_offset(Op::DJNZ(-82)));
     assert_eq!(None, z80.exec_with_offset(Op::DJNZ(-52)));
     assert_eq!(0, z80.registers.get_reg8(Reg8::B));
+
+    // Don't underflow when we add our offset
+    z80.set_loc8(&Location8::Reg(Reg8::B), 2);
+    z80.registers.set_pc(0x0010);
+    assert_eq!(Some(0x0001), z80.exec_with_offset(Op::DJNZ(-17)));
+    assert_eq!(1, z80.registers.get_reg8(Reg8::B));
 }
 
 #[test]
