@@ -5,6 +5,7 @@ use zeerust::z80;
 const HELLO_ZEERUST: &[u8] = include_bytes!("zeerust.bin");
 const HELLO_WORLD: &[u8] = include_bytes!("hello_world.bin");
 const COUNTDOWN: &[u8] = include_bytes!("countdown.bin");
+const FIZZBUZZ: &[u8] = include_bytes!("fizzbuzz.bin");
 
 fn run(program: &[u8]) -> Vec<u8> {
     let mut z80 = z80::Z80::default();
@@ -29,4 +30,16 @@ fn hello_world() {
 #[test]
 fn countdown() {
     assert_eq!(b"9\n8\n7\n6\n5\n4\n3\n2\n1\n".to_vec(), run(COUNTDOWN))
+}
+
+#[test]
+fn fizzbuzz() {
+    let expected: Vec<u8> = [
+        "01", "02", "Fizz", "04", "Buzz", "Fizz", "07", "08", "Fizz", "Buzz", "11", "Fizz", "13",
+        "14", "FizzBuzz", "16", "17", "Fizz", "19", "Buzz\n",
+    ]
+    .join("\n")
+    .as_bytes()
+    .to_vec();
+    assert_eq!(expected, run(FIZZBUZZ));
 }

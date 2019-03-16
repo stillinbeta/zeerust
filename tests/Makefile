@@ -1,5 +1,5 @@
 ASM ?= "z80asm"
-FILES = hello_world.bin zeerust.bin countdown.bin
+FILES = hello_world.bin zeerust.bin countdown.bin fizzbuzz.bin
 
 all: $(FILES)
 
