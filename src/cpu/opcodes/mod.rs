@@ -1,5 +1,6 @@
 use crate::ops::{JumpConditional, Location16, Location8, Op, Reg16, Reg8};
 
+mod arithmetic;
 mod bits;
 mod file;
 mod index;
@@ -164,46 +165,14 @@ pub fn opcode(code: [u8; 4]) -> (Op, usize) {
         [0x3F, _, _, _] => (Op::CCF, 1),
         [0x37, _, _, _] => (Op::SCF, 1),
 
-        [op, o1, _, _] if op & 0b1010_0000 == 0b1010_0000 => {
-            let opr = match op & 0b0001_1000 {
-                0b0000_0000 => Op::AND,
-                0b0001_0000 => Op::OR,
-                0b0000_1000 => Op::XOR,
-                0b0001_1000 => Op::CP,
-                _ => unreachable!(),
-            };
-            let (loc, b) = if op & 0b0100_0000 == 0b0100_0000 {
-                // if 6th bit set, immediate
-                (Location8::Immediate(o1), 2)
-            } else {
-                // Otherwise Just a regular bit register
-                (reg_bits(op), 1)
-            };
-            (opr(loc), b)
-        }
+        [op, o1, _, _] if op & 0b1010_0000 == 0b1010_0000 => arithmetic::boolean(op, o1),
 
         // INC
         [a, _, _, _] if a & 0b1100_0111 == 0b0000_0100 => (Op::INC(reg_bits(a >> 3)), 1),
         // DEC
         [a, _, _, _] if a & 0b1100_0111 == 0b0000_0101 => (Op::DEC(reg_bits(a >> 3)), 1),
         // Add and Subtract
-        [op, o1, _, _] if op & 0b1010_0000 == 0x80 => {
-            let opr = match op & 0b0001_1000 {
-                0b0000_0000 => Op::ADD8,
-                0b0000_1000 => Op::ADC,
-                0b0001_0000 => Op::SUB8,
-                0b0001_1000 => Op::SBC,
-                _ => unreachable!(),
-            };
-            let (loc, b) = if op & 0b0100_0000 == 0b0100_0000 {
-                // if 6th bit set, immediate
-                (Location8::Immediate(o1), 2)
-            } else {
-                // Otherwise Just a regular bit register
-                (reg_bits(op), 1)
-            };
-            (opr(Location8::Reg(Reg8::A), loc), b)
-        }
+        [op, o1, _, _] if op & 0b1010_0000 == 0x80 => arithmetic::add_subtract(op, o1),
 
         // [op, _, _, ]
         [o1, o2, o3, o4] => panic!(
