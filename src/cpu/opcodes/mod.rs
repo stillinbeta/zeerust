@@ -1,3 +1,5 @@
+//! This module is responsibel for parse z80 machine code (a string of bytes) into zeerust's symbolic representation.
+
 use crate::ops::{JumpConditional, Location16, Location8, Op, Reg16, Reg8};
 
 mod arithmetic;
@@ -12,6 +14,10 @@ mod test;
 pub use file::parse_stream;
 use util::*;
 
+/// Parse a series of bytes into an opcode.
+/// Opcodes can be up to four bytes, but are often less.
+/// The usize from the tuple is the number of bytes consumed.
+/// The program counter should be incremented by this much
 pub fn opcode(code: [u8; 4]) -> (Op, usize) {
     match code {
         [0x00, _, _, _] => (Op::NOP, 1),

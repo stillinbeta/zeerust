@@ -1,5 +1,5 @@
-///! This module provides the symbolic representation of all z80 instructions
-///! You can construct these yourself, or you can parse binaries using `zeerust::cpu::opcodes`.
+//! This module provides the symbolic representation of all z80 instructions
+//! You can construct these yourself, or you can parse binaries using `zeerust::cpu::opcodes`.
 
 /// Op represents a single operation.
 /// This representation (and backing implementation) is more expressive than

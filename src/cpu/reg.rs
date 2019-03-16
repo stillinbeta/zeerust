@@ -1,4 +1,4 @@
-///!  The internal representation of all the registers of the z80.
+//!  The internal representation of all the registers of the z80.
 use crate::ops::{Reg16, Reg8, StatusFlag};
 
 #[derive(Default, Debug)]

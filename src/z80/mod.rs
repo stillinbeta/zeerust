@@ -1,5 +1,5 @@
-///! This is where the emulator itself lives.
-///! All other modules simply provide support for this one.
+//! This is where the emulator itself lives.
+//! All other modules simply provide support for this one.
 use std::collections::HashMap;
 
 use crate::cpu;

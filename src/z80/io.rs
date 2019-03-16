@@ -1,4 +1,4 @@
-///! Methods associated with the IN and OUT instructions of the z80
+//! Methods associated with the IN and OUT instructions of the z80
 use std::sync::Mutex;
 
 use super::Z80;
