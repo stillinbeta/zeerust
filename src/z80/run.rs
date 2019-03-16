@@ -1,5 +1,9 @@
+extern crate log;
+use log::debug;
+
 use super::Z80;
 use crate::cpu::opcodes;
+use crate::ops::{Reg16, Reg8};
 
 impl<'a> Z80<'a> {
     pub fn load(&mut self, program: &[u8]) {
@@ -20,7 +24,20 @@ impl<'a> Z80<'a> {
                 mem.get((pc + 3) as usize).map_or(0x00, |i| *i),
             ];
             let (opc, consumed) = opcodes::opcode(opcode_horizon);
-            let pc = self.exec_with_offset(opc).unwrap_or(pc + consumed as u16);
+            debug!("Running {:?}", opc);
+            debug!(
+                "A: {:02x}, B: {:02}, C: {:02x}, D: {:02x}, HL: {:04x}, F: {:08b}, PC: {:02x}",
+                self.registers.get_reg8(Reg8::A),
+                self.registers.get_reg8(Reg8::B),
+                self.registers.get_reg8(Reg8::C),
+                self.registers.get_reg8(Reg8::D),
+                self.registers.get_reg16(&Reg16::HL),
+                self.registers.get_reg8(Reg8::F),
+                self.registers.get_pc(),
+            );
+            let pc = self
+                .exec_with_offset(opc) //dbg!(opc))
+                .unwrap_or(pc + consumed as u16);
             self.registers.set_pc(pc as u16);
         }
     }

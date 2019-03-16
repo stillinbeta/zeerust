@@ -4,6 +4,8 @@ use std::env;
 use std::fs::File;
 use std::io::{stdout, Read, Result, Write};
 
+extern crate stderrlog;
+
 use zeerust::z80;
 use zeerust::z80::io;
 
@@ -25,6 +27,13 @@ fn main() -> Result<()> {
     let mut file = File::open(filename)?;
     let mut buf = Vec::new();
     file.read_to_end(&mut buf)?;
+
+    #[cfg(debug_assertions)]
+    stderrlog::new()
+        .module(module_path!())
+        .verbosity(5)
+        .init()
+        .unwrap();
 
     let mut z80 = z80::Z80::default();
     z80.install_output(0x00, &STDOUT_DEVICE);
