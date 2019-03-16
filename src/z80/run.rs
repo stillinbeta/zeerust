@@ -6,6 +6,9 @@ use crate::cpu::opcodes;
 use crate::ops::{Reg16, Reg8};
 
 impl<'a> Z80<'a> {
+    /// Load a function into memory.
+    /// This is done by mapping the provided bytes into memory, starting at 0x0000
+    /// You only have 16 kibibytes to work with, so be careful!
     pub fn load(&mut self, program: &[u8]) {
         program
             .iter()
@@ -13,6 +16,10 @@ impl<'a> Z80<'a> {
             .map(|(i, b)| self.memory.memory[i] = *b)
             .collect()
     }
+
+    /// Start executing.
+    /// The program counter is set to 0x0000, and instructions are executed until a HALT is encountered.
+    /// If the program does not contain a HALT, the emulator will simply continue until it runs out of memory.
     pub fn run(&mut self) {
         let mem = self.memory.memory;
         while !self.is_halted {

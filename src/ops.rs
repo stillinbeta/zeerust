@@ -1,62 +1,117 @@
+///! This module provides the symbolic representation of all z80 instructions
+///! You can construct these yourself, or you can parse binaries using `zeerust::cpu::opcodes`.
+
+/// Op represents a single operation.
+/// This representation (and backing implementation) is more expressive than
+/// the processor itself.
+/// For example `ADD8(Location8::Reg(Reg8::D), Location8::Immediate(10))` is a valid representation, but
+/// the Z80 features no such instruction.
+/// Usually executing an instruction like this will just work, but in some cases a panic will occur
+/// (Such as attempting to store to an immediate, which doesn't make any sense).
+/// It is probably best to stick to the "guide rails" of the Z80 operations.
 #[derive(Debug, PartialEq, Clone)]
 pub enum Op {
-    ADC(Location8, Location8),  // Add including carry
-    ADD8(Location8, Location8), // Add
-    INC(Location8),             // Add one
+    /// ADd including Carry
+    ADC(Location8, Location8),
+    /// ADD (8-bit)
+    ADD8(Location8, Location8),
+    /// INCrement
+    INC(Location8),
 
-    SBC(Location8, Location8),  // Subtract including borrow
-    SUB8(Location8, Location8), // Subtract
-    DEC(Location8),             // Decement
+    /// SuBtract including borrow (Carry bit)
+    SBC(Location8, Location8),
+    /// SUBtraction (8-bit)
+    SUB8(Location8, Location8),
+    /// DECrement
+    DEC(Location8),
 
+    /// bitwise AND
     AND(Location8),
+    /// bitwise OR
     OR(Location8),
+    /// bitwise XOR
     XOR(Location8),
-    CP(Location8), // Subtract, only setting flags
+    /// two's ComPliment
+    CP(Location8),
 
+    /// One's ComPLiment
     CPL, // One's Compliment
+    /// sign NEGation (two's compliment)
     NEG, // Negation (two's compliment)
+    /// toggle the Carry Flag
     CCF, // toggle carry flag
-    SCF, // set carry flag unconditionally
+    /// Set the Carry Flag unconditionally
+    SCF,
 
-    NOP,  // Do nothing
+    /// Do nothing (No-OPeration)
+    NOP,
+    /// HALT execution (until woken)
     HALT, // End execution (until woken)
 
-    DAA, // BCD Nonsense. Not implemented.
+    /// BCD nonsense. Not implemented
+    DAA,
 
-    RLCA,           // Rotate Accumulator Left, set Carry
-    RLA,            // Rotate Accumulator Left, through carry
-    RRCA,           // Rotate Accumulator Right, set Carry
-    RRA,            // Rotate Accumulator Left, through carry
-    RLC(Location8), // Rotate Left, set Carry
-    RL(Location8),  // Rotate Left, through carry
-    RRC(Location8), // Rotate Right, set Carry
-    RR(Location8),  // Rotate Right, through carry
+    /// Rotate Accumulator Left, set Carry
+    RLCA,
+    /// Rotate Accumulator Left, through carry
+    RLA,
+    /// Rotate Accumulator Right, set Carry
+    RRCA,
+    /// Rotate Accumulator Left, through carry
+    RRA,
+    /// Rotate Left, set Carry
+    RLC(Location8),
+    /// Rotate Left, through carry
+    RL(Location8),
+    /// Rotate Right, set Carry
+    RRC(Location8),
+    /// Rotate Right, through carry
+    RR(Location8),
 
-    SLA(Location8), // Shift Left
-    SRL(Location8), // Shift Right
-    SRA(Location8), // Shift Right, preserving 7th bit
+    /// Shift Left
+    SLA(Location8),
+    /// Shift Right
+    SRL(Location8),
+    /// Shift Right, preserving 7th bit
+    SRA(Location8),
 
-    RLD, // Rotate nibbles Left through accumulator
-    RRD, // Rotate nibbles Right through accumulator
+    /// Rotate nibbles Left through accumulator
+    RLD,
+    /// Rotate nibbles Right through accumulator
+    RRD,
 
-    BIT(u8, Location8), // set Zero flag if BIT is on
-    SET(u8, Location8), // SET b bit in location
-    RES(u8, Location8), // RESet b bit in location
+    /// set zero flag if BIT is on
+    BIT(u8, Location8),
+    /// SET b bit in location
+    SET(u8, Location8),
+    /// RESet b bit in location
+    RES(u8, Location8),
 
-    IN(Location8, Location8),  // INput from a peripheral
-    OUT(Location8, Location8), // OUTput to a peripheral
+    /// INput from a peripheral
+    IN(Location8, Location8),
+    /// OUTput to a peripheral
+    OUT(Location8, Location8),
 
-    JP(JumpConditional, Location16), // JumP to the given position
-    JR(JumpConditional, i8),         // Jump to the given Relative position
-    DJNZ(i8),                        // Do a Jump if register b is Non Zero
-    CALL(JumpConditional, u16),      // CALL a method
+    /// JumP to the given position
+    JP(JumpConditional, Location16),
+    /// Jump to the given Relative position
+    JR(JumpConditional, i8),
+    /// Decrement register b, then Jump if register b is Non Zero
+    DJNZ(i8),
+    /// CALL a method
+    CALL(JumpConditional, u16),
+    /// RETurn from a method call
     RET(JumpConditional),
 
-    POP(Location16),           // Pop an address off of the stack
-    PUSH(Location16),          // Push an address onto a stack
-    LD8(Location8, Location8), // LoaD the given address
+    /// Pop an address off of the stack
+    POP(Location16),
+    /// Push an address onto a stack
+    PUSH(Location16),
+    /// LoaD the given address (8-bit)
+    LD8(Location8, Location8),
+    /// LoaD the given address (16-bit)
     LD16(Location16, Location16),
-    // CALL,
+    // TODO
     // CPD,
     // CPDR,
     // CPI,
@@ -78,7 +133,6 @@ pub enum Op {
     // OTIR,
     // OUTD,
     // OUTI,
-    // RET,
     // RETI,
     // RETN,
     // RST,
@@ -89,6 +143,7 @@ pub enum Op {
     // SRL,
 }
 
+/// 8 bit registers
 #[derive(Debug, PartialEq, Clone, Copy)]
 pub enum Reg8 {
     A,
@@ -99,67 +154,111 @@ pub enum Reg8 {
     E,
     H,
     L,
+    /// A'
     AP,
+    /// F'
     FP,
+    /// B'
     BP,
+    /// C'
     CP,
+    /// D'
     DP,
+    /// E'
     EP,
+    /// H'
     HP,
+    /// L'
     LP,
 }
 
+/// 16-bit registers
 #[derive(Debug, PartialEq, Clone)]
 pub enum Reg16 {
     AF,
     BC,
     DE,
     HL,
+    /// AF'
     AFP,
+    /// BC'
     BCP,
+    /// DE'
     DEP,
+    /// HL'
     HLP,
 
     IX,
     IY,
+    /// Stack Pointer
     SP,
 }
 
+/// Anywhere an 8-bit value could could come from or be stored to
 #[derive(Debug, PartialEq, Clone)]
 pub enum Location8 {
+    /// A register
     Reg(Reg8),
+    /// A location in memory, pointed to by a 16-bit register
     RegIndirect(Reg16),
+    /// A location in memory, pointed to by a literal number
     ImmediateIndirect(u16),
+    /// A literal number
     Immediate(u8),
 }
 
+/// Anywhere a 16-bit value could could come from or be stored to
 #[derive(Debug, PartialEq, Clone)]
 pub enum Location16 {
+    /// A 16-bit combined register
     Reg(Reg16),
     // RegIndirect(Reg16), // Is this used anywhere?
-    Immediate(u16),
+    /// A location in memory, pointed to by a literal number
     ImmediateIndirect(u16),
+    /// A literal number
+    Immediate(u16),
 }
 
+/// Status Flags. Implemented in the Z80 as a bitfield on register F
 #[derive(Debug, PartialEq, Clone)]
 pub enum StatusFlag {
+    /// Bit 0. Indicates carry or borrows from bit 7
     Carry,
+    /// Bit 1. Usually 0 after addition, 1 after subtraction
     AddSubtract,
+    /// Bit 2. Indicates overflow after arithmetic, or parity after bitwise operations
+    /// Parity is set if the number of 1s in the number is even, otherwise it is reset
     ParityOverflow,
+    // Bit 3 unused
+    /// Bit 4. Indicates carry or borrows from bit 3
     HalfCarry,
+    /// Bit 6. Set if result of an operation was zero
     Zero,
+    /// Bit 7. Set if the 7th bit is 1 after an arithmatic operation, i.e. number is negative if considered as signed
     Sign,
 }
 
+/// Jumps and Returns can be conditional on certain flags being set
 #[derive(Debug, PartialEq, Copy, Clone)]
 pub enum JumpConditional {
+    /// Both Jump and Return have unconditional versions.
+    /// Rather than a seperate Op, these will have this flag.
+    /// It always evaluates to true
     Unconditional,
+    /// True if the Zero flag is reset
     NonZero,
+    /// True if the Zero flag is set
     Zero,
+    /// True if the Carry flag is reset
     NoCarry,
+    /// True if the Carry flag is set
     Carry,
+    /// True if the ParityOverflow bit is reset
     ParityOdd,
+    /// True if the ParityOverflow bit is set
     ParityEven,
+    /// True if the Sign bit is reset
     SignPositive,
+    /// True if the Sign bit is set
     SignNegative,
 }

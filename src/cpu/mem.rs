@@ -1,3 +1,5 @@
+///! The internal representation of the z80's memory.
+///! Currently just a large array.
 pub const MEMORY_SIZE: usize = 16 * 1024; // 16 kibibytes
 
 pub struct Memory {

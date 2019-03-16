@@ -1,3 +1,4 @@
+///!  The internal representation of all the registers of the z80.
 use crate::ops::{Reg16, Reg8, StatusFlag};
 
 #[derive(Default, Debug)]
@@ -40,10 +41,12 @@ impl Registers {
         }
     }
 
+    /// Retrieve a given flag, bitmasked out of register F.
     pub fn get_flag(&self, f: &StatusFlag) -> bool {
         (self.f & Self::flag_mask(f)) != 0
     }
 
+    /// Retrieve a given flag, bitmasked into of register F.
     pub fn set_flag(&mut self, f: &StatusFlag, set: bool) {
         if set {
             self.f |= Self::flag_mask(f)
@@ -74,6 +77,7 @@ impl Registers {
         }
     }
 
+    /// Set an 8-bit register
     pub fn set_reg8(&mut self, r: Reg8, v: u8) {
         match r {
             Reg8::A => self.a = v,
@@ -96,6 +100,7 @@ impl Registers {
         }
     }
 
+    /// Set a 16-bit registers. These are made of two 8-bit registers, little-endian.
     pub fn set_reg16(&mut self, r: &Reg16, v: u16) {
         let [r0, r1] = v.to_le_bytes();
         match r {
@@ -137,6 +142,7 @@ impl Registers {
         }
     }
 
+    /// Get a 16-bit register. These are a little-endian combination of two 8-bit registers.
     pub fn get_reg16(&self, r: &Reg16) -> u16 {
         let (r0, r1) = match r {
             Reg16::AF => (self.a, self.f),
@@ -154,10 +160,12 @@ impl Registers {
         (u16::from(r1) << 8) + u16::from(r0)
     }
 
+    /// Get the current program counter
     pub fn get_pc(&self) -> u16 {
         self.pc
     }
 
+    /// Set the program counter
     pub fn set_pc(&mut self, pc: u16) {
         self.pc = pc
     }

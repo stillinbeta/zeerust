@@ -1,3 +1,5 @@
+///! This is where the emulator itself lives.
+///! All other modules simply provide support for this one.
 use std::collections::HashMap;
 
 use crate::cpu;
@@ -8,6 +10,12 @@ mod run;
 #[cfg(test)]
 mod tests;
 
+/// The core emulation type.
+/// Create one with ::default().
+/// This will initialize everything to zero, except the stack pointer, which is set to MAX_MEMORY.
+/// (currently 16 kibibytes).
+/// By default, no input or output devices are attached.
+/// Use install_input and install_output to connect them.
 pub struct Z80<'a> {
     registers: cpu::reg::Registers,
     memory: cpu::mem::Memory,
@@ -38,6 +46,8 @@ impl<'a> Z80<'a> {
     const ACC: ops::Location8 = ops::Location8::Reg(ops::Reg8::A);
     const HL_INDIRECT: ops::Location8 = ops::Location8::RegIndirect(ops::Reg16::HL);
 
+    /// Execute a single instruction.
+    /// The program counter will not be incremented
     pub fn exec(&mut self, op: ops::Op) {
         let _ = self.exec_with_offset(op);
     }
