@@ -5,6 +5,7 @@ authors = ["Ellie Frost <web@stillinbeta.com>"]
 edition = "2018"
 
 description = "A Z80 CPU Emulator"
+readme = "README.md"
 repository = "https://github.com/stillinbeta/zeerust"
 license = "Apache-2.0"
 keywords = ["z80", "assembly", "emulator", "ti83", "zxspectrum"]
