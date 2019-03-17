@@ -28,3 +28,10 @@ after_success: |
     cargo tarpaulin --out Xml
     bash <(curl -s https://codecov.io/bash)
   fi
+
+deploy:
+  provider: cargo
+  on:
+    tags: true
+  token:
+    secure: 1JVl9esJz5xNXgZ/YFwbZVc1RRV6Y5agWXJSHMiHMXyN/xUw3w9h58ae6UYjUZlfiJ4SgNQZ1vcS/2wlJie9HefpF131SfjmHD4Zo/DzBoePvn4sW5T5lVQUWakSZ9EoM3dNnJUNMHwMd/mB2/57MuG3imF11U+GZrB1sx/s812GlkwJ0i1pWPRJzKJ+88Qvi0UHkYDRatpDh0j/zmwtS0lasOoFPCceGNIU8VJqLthQ39DEWix/f1SyaFzlvdinKNe2MqCVQ2JYgt4Iwy1LOI7JGLiecL0+xX9QhasZeDyGp1t3piyBG4ujKKL+RaoHj0RpGhRlffN+4Z5sV/uGTZE6c+3eoArRO5R508Q26k97T6A07erhXMLzRogxAZ8HzjP5KbCxU5TeIafIT+MdS5Z2qhgrwTSp9W3HR6vgrO/PTJs0svp9iyOCe6G7jogpfmpoGplzE8DB9w9GmNRi0DBMuQww+RyBZ089ViMiJ6e0/yXuOFAor3Eo6igQBZyYFF5CLJ3fTQd9IvMx24K6wCFhdqqDI6c69S3xryF9R4E5xaPjouT217Dq205qS9xHFzqL6fWIJDHST8ytUyXsU4fn91Z5l6F85hHPzsrd//xw2LRJFabGt4ZL7XZohcraQdCs3KBYrDTMFs8+NCJVfh8J4IdoXB6iInUqJ6fl4xc=
