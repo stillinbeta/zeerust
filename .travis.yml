@@ -11,7 +11,7 @@ rust:
   - nightly
 script:
   - cargo test --verbose
-  - rustup component add clippy && cargo clippy --all-targets -D || echo "no clippy"
+  - if rustup component add clippy ; then cargo clippy --all-targets -- -D warnings ; else echo "no clippy"; fi
 
 matrix:
   allow_failures:
