@@ -3,11 +3,15 @@ use std::sync::Mutex;
 
 use super::Z80;
 
+/// An InputDevice can be read from, one byte at a time
 pub trait InputDevice {
+    /// Read a single byte
     fn input(&self) -> u8;
 }
 
+/// An OutputDevice can be written to, one byte at a time
 pub trait OutputDevice {
+    /// Write a single byte
     fn output(&self, val: u8);
 }
 
@@ -39,19 +43,20 @@ impl<'a> Z80<'a> {
     }
 }
 
+/// BufInput is a simple InputDevice than produces input when requested, from back to front.
+/// Useful in tests.
 #[derive(Default)]
 pub struct BufInput {
     input: Mutex<Vec<u8>>,
 }
 
 impl InputDevice for BufInput {
+    /// Read the right-most byte from the internal buffer
     fn input(&self) -> u8 {
         self.input.lock().unwrap().pop().unwrap()
     }
 }
 
-/// BufInput is a simple InputDevice than produces input when requested, from back to front.
-/// Useful in tests.
 impl BufInput {
     pub fn new(v: Vec<u8>) -> Self {
         Self {
@@ -74,6 +79,7 @@ impl BufOutput {
 }
 
 impl OutputDevice for BufOutput {
+    /// Write a byte to the end of the internal buffer
     fn output(&self, val: u8) {
         self.output.lock().unwrap().push(val)
     }
