@@ -1,4 +1,7 @@
-[![Build Status](https://travis-ci.org/stillinbeta/zeerust.svg?branch=master)](https://travis-ci.org/stillinbeta/zeerust) [![codecov](https://codecov.io/gh/stillinbeta/zeerust/branch/master/graph/badge.svg)](https://codecov.io/gh/stillinbeta/zeerust)
+[![crates.io](https://img.shields.io/crates/v/zeerust.svg)](https://crates.io/crates/zeerust)
+[![docs.rs](https://docs.rs/zeerust/badge.svg)](https://docs.rs/zeerust/latest/zeerust/)
+[![Build Status](https://travis-ci.org/stillinbeta/zeerust.svg?branch=master)](https://travis-ci.org/stillinbeta/zeerust) 
+[![codecov](https://codecov.io/gh/stillinbeta/zeerust/branch/master/graph/badge.svg)](https://codecov.io/gh/stillinbeta/zeerust)
 
 # Zeerust
 
