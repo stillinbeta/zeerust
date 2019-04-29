@@ -17,8 +17,8 @@ mod tests;
 /// By default, no input or output devices are attached.
 /// Use install_input and install_output to connect them.
 pub struct Z80<'a> {
-    registers: cpu::reg::Registers,
-    memory: cpu::mem::Memory,
+    pub registers: cpu::reg::Registers,
+    pub memory: cpu::mem::Memory,
 
     is_halted: bool,
 
