@@ -1,7 +1,7 @@
 //!  The internal representation of all the registers of the z80.
 use crate::ops::{Reg16, Reg8, StatusFlag};
 
-#[derive(Default, Debug, Clone)]
+#[derive(Default, Debug, Clone, PartialEq)]
 pub struct Registers {
     a: u8,
     b: u8,

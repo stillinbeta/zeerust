@@ -1,6 +1,8 @@
 //! This module provides the symbolic representation of all z80 instructions
 //! You can construct these yourself, or you can parse binaries using `zeerust::cpu::opcodes`.
 
+use std::fmt::Display;
+
 /// Op represents a single operation.
 /// This representation (and backing implementation) is more expressive than
 /// the processor itself.
@@ -144,7 +146,7 @@ pub enum Op {
 }
 
 /// 8 bit registers
-#[derive(Debug, PartialEq, Clone, Copy)]
+#[derive(Debug, PartialEq, Clone, Copy, Display)]
 pub enum Reg8 {
     A,
     F,
