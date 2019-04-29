@@ -154,7 +154,7 @@ fn sbc() {
 }
 
 #[test]
-#[allow(clippy::cyclomatic_complexity)]
+#[allow(clippy::cognitive_complexity)]
 fn ld_rr() {
     assert_opcode!(LD8(Reg(A), Reg(A)), 1, 0x7F);
     assert_opcode!(LD8(Reg(A), Reg(B)), 1, 0x78);
@@ -376,7 +376,7 @@ mod bits {
     use super::*;
 
     #[test]
-    #[allow(clippy::cyclomatic_complexity)]
+    #[allow(clippy::cognitive_complexity)]
     fn get() {
         assert_opcode!(BIT(0, Reg(A)), 2, 0xCB, 0x47);
         assert_opcode!(BIT(0, Reg(B)), 2, 0xCB, 0x40);
@@ -452,7 +452,7 @@ mod bits {
     }
 
     #[test]
-    #[allow(clippy::cyclomatic_complexity)]
+    #[allow(clippy::cognitive_complexity)]
     fn reset() {
         assert_opcode!(RES(0, Reg(A)), 2, 0xCB, 0x87);
         assert_opcode!(RES(0, Reg(B)), 2, 0xCB, 0x80);
@@ -528,7 +528,7 @@ mod bits {
     }
 
     #[test]
-    #[allow(clippy::cyclomatic_complexity)]
+    #[allow(clippy::cognitive_complexity)]
     fn set() {
         assert_opcode!(SET(0, Reg(A)), 2, 0xCB, 0xC7);
         assert_opcode!(SET(0, Reg(B)), 2, 0xCB, 0xC0);
