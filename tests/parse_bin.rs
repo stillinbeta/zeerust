@@ -1,9 +1,8 @@
 extern crate zeerust;
 
 use zeerust::cpu::opcodes::parse_stream;
+use zeerust::examples::HELLO_ZEERUST_BIN;
 use zeerust::ops::*;
-
-const HELLO_ZEERUST: &[u8] = include_bytes!("zeerust.bin");
 
 #[test]
 fn parse_bin() {
@@ -23,5 +22,5 @@ fn parse_bin() {
         Op::OUT(Location8::Reg(Reg8::A), Location8::Immediate(0x00)),
         Op::HALT,
     ];
-    assert_eq!(expected, parse_stream(HELLO_ZEERUST.into()));
+    assert_eq!(expected, parse_stream(HELLO_ZEERUST_BIN.into()));
 }

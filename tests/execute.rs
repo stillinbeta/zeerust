@@ -1,11 +1,7 @@
 extern crate zeerust;
 
+use zeerust::examples::{COUNTDOWN_BIN, FIZZBUZZ_BIN, HELLO_WORLD_BIN, HELLO_ZEERUST_BIN};
 use zeerust::z80;
-
-const HELLO_ZEERUST: &[u8] = include_bytes!("zeerust.bin");
-const HELLO_WORLD: &[u8] = include_bytes!("hello_world.bin");
-const COUNTDOWN: &[u8] = include_bytes!("countdown.bin");
-const FIZZBUZZ: &[u8] = include_bytes!("fizzbuzz.bin");
 
 fn run(program: &[u8]) -> Vec<u8> {
     let mut z80 = z80::Z80::default();
@@ -19,17 +15,17 @@ fn run(program: &[u8]) -> Vec<u8> {
 
 #[test]
 fn hello_zeerust() {
-    assert_eq!(b"ZEERUST".to_vec(), run(HELLO_ZEERUST));
+    assert_eq!(b"ZEERUST".to_vec(), run(HELLO_ZEERUST_BIN));
 }
 
 #[test]
 fn hello_world() {
-    assert_eq!(b"Hello World\n".to_vec(), run(HELLO_WORLD))
+    assert_eq!(b"Hello World\n".to_vec(), run(HELLO_WORLD_BIN))
 }
 
 #[test]
 fn countdown() {
-    assert_eq!(b"9\n8\n7\n6\n5\n4\n3\n2\n1\n".to_vec(), run(COUNTDOWN))
+    assert_eq!(b"9\n8\n7\n6\n5\n4\n3\n2\n1\n".to_vec(), run(COUNTDOWN_BIN))
 }
 
 #[test]
@@ -41,5 +37,5 @@ fn fizzbuzz() {
     .join("\n")
     .as_bytes()
     .to_vec();
-    assert_eq!(expected, run(FIZZBUZZ));
+    assert_eq!(expected, run(FIZZBUZZ_BIN));
 }
