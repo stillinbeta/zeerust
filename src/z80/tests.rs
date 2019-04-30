@@ -804,8 +804,8 @@ fn in_op() {
 
     z80.registers.set_reg8(Reg8::C, 0x05);
 
-    z80.install_input(0x00, &buf1);
-    z80.install_input(0x05, &buf2);
+    z80.install_input(0x00, Box::new(buf1.clone()));
+    z80.install_input(0x05, Box::new(buf2.clone()));
 
     z80.exec(Op::IN(Location8::Reg(Reg8::A), Location8::Immediate(0x00)));
     assert_hex!(0x33, z80.registers.get_reg8(Reg8::A));
@@ -832,8 +832,8 @@ fn out_op() {
     let buf2 = super::io::BufOutput::default();
     z80.registers.set_reg8(Reg8::C, 0x05);
 
-    z80.install_output(0x00, &buf1);
-    z80.install_output(0x05, &buf2);
+    z80.install_output(0x00, Box::new(buf1.clone()));
+    z80.install_output(0x05, Box::new(buf2.clone()));
 
     z80.registers.set_reg8(Reg8::A, 0xFD);
     z80.registers.set_reg8(Reg8::B, 0x69);

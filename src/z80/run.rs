@@ -5,7 +5,7 @@ use super::Z80;
 use crate::cpu::opcodes;
 use crate::ops::{Op, Reg16, Reg8};
 
-impl<'a> Z80<'a> {
+impl Z80 {
     /// Load a function into memory.
     /// This is done by mapping the provided bytes into memory, starting at 0x0000
     /// You only have 16 kibibytes to work with, so be careful!

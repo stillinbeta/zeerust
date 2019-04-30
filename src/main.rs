@@ -17,8 +17,6 @@ impl io::OutputDevice for StdoutOutput {
     }
 }
 
-const STDOUT_DEVICE: StdoutOutput = StdoutOutput {};
-
 fn main() -> Result<()> {
     let filename = env::args().nth(1).unwrap_or_else(|| {
         eprintln!("Missing file to run");
@@ -36,7 +34,7 @@ fn main() -> Result<()> {
         .unwrap();
 
     let mut z80 = z80::Z80::default();
-    z80.install_output(0x00, &STDOUT_DEVICE);
+    z80.install_output(0x00, Box::new(StdoutOutput {}));
     z80.load(buf.as_slice());
     z80.run();
     Ok(())

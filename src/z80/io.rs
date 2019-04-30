@@ -1,5 +1,6 @@
 //! Methods associated with the IN and OUT instructions of the z80
-use std::sync::Mutex;
+use std::cell::RefCell;
+use std::rc::Rc;
 
 use super::Z80;
 
@@ -15,17 +16,17 @@ pub trait OutputDevice {
     fn output(&self, val: u8);
 }
 
-impl<'a> Z80<'a> {
+impl Z80 {
     /// Install an input device at the given index. For example:
     /// ```
     /// use zeerust::z80;
     ///
     /// let mut z80 = z80::Z80::default();
     /// let inp = z80::io::BufInput::new(vec!(b'Z'));
-    /// z80.install_input(0, &inp);
+    /// z80.install_input(0, Box::new(inp.clone()));
     ///```
     /// This will then be usable with `IN (0), <register>`.
-    pub fn install_input(&mut self, index: u8, device: &'a InputDevice) {
+    pub fn install_input(&mut self, index: u8, device: Box<InputDevice>) {
         self.input_devices.insert(index, device);
     }
 
@@ -35,52 +36,52 @@ impl<'a> Z80<'a> {
     ///
     /// let mut z80 = z80::Z80::default();
     /// let out = z80::io::BufOutput::default();
-    /// z80.install_output(0, &out);
+    /// z80.install_output(0, Box::new(out.clone()));
     ///```
     /// This will then be usable with `OUT (0), <register>`.
-    pub fn install_output(&mut self, index: u8, device: &'a OutputDevice) {
+    pub fn install_output(&mut self, index: u8, device: Box<OutputDevice>) {
         self.output_devices.insert(index, device);
     }
 }
 
 /// BufInput is a simple InputDevice than produces input when requested, from back to front.
 /// Useful in tests.
-#[derive(Default)]
+#[derive(Default, PartialEq, Clone)]
 pub struct BufInput {
-    input: Mutex<Vec<u8>>,
+    input: Rc<RefCell<Vec<u8>>>,
 }
 
 impl InputDevice for BufInput {
     /// Read the right-most byte from the internal buffer
     fn input(&self) -> u8 {
-        self.input.lock().unwrap().pop().unwrap()
+        self.input.borrow_mut().pop().unwrap()
     }
 }
 
 impl BufInput {
     pub fn new(v: Vec<u8>) -> Self {
         Self {
-            input: Mutex::new(v),
+            input: Rc::new(RefCell::new(v)),
         }
     }
 }
 
-/// BufOutput is a simple Output device that recieves output and appends it to an internal vector.
-#[derive(Default)]
+/// BufOutput is a simple Output device that receives output and appends it to an internal vector.
+#[derive(Default, PartialEq, Clone)]
 pub struct BufOutput {
-    output: Mutex<Vec<u8>>,
+    output: Rc<RefCell<Vec<u8>>>,
 }
 
 impl BufOutput {
     /// All of the outputs recieved from the processor, most recent last.
     pub fn result(&self) -> Vec<u8> {
-        self.output.lock().unwrap().to_vec()
+        self.output.borrow_mut().to_vec()
     }
 }
 
 impl OutputDevice for BufOutput {
     /// Write a byte to the end of the internal buffer
     fn output(&self, val: u8) {
-        self.output.lock().unwrap().push(val)
+        self.output.borrow_mut().push(val)
     }
 }

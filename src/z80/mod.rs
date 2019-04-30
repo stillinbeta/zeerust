@@ -16,17 +16,17 @@ mod tests;
 /// (currently 16 kibibytes).
 /// By default, no input or output devices are attached.
 /// Use install_input and install_output to connect them.
-pub struct Z80<'a> {
+pub struct Z80 {
     pub registers: cpu::reg::Registers,
     pub memory: cpu::mem::Memory,
 
     is_halted: bool,
 
-    input_devices: HashMap<u8, &'a io::InputDevice>,
-    output_devices: HashMap<u8, &'a io::OutputDevice>,
+    input_devices: HashMap<u8, Box<io::InputDevice>>,
+    output_devices: HashMap<u8, Box<io::OutputDevice>>,
 }
 
-impl<'a> Default for Z80<'a> {
+impl Default for Z80 {
     fn default() -> Self {
         let mut registers = cpu::reg::Registers::default();
         registers.set_reg16(&ops::Reg16::SP, cpu::mem::MEMORY_SIZE as u16);
@@ -41,7 +41,7 @@ impl<'a> Default for Z80<'a> {
     }
 }
 
-impl<'a> Z80<'a> {
+impl Z80 {
     const ONE_IMM: ops::Location8 = ops::Location8::Immediate(1);
     const ACC: ops::Location8 = ops::Location8::Reg(ops::Reg8::A);
     const HL_INDIRECT: ops::Location8 = ops::Location8::RegIndirect(ops::Reg16::HL);

@@ -6,7 +6,7 @@ use zeerust::z80;
 fn run(program: &[u8]) -> Vec<u8> {
     let mut z80 = z80::Z80::default();
     let buf = z80::io::BufOutput::default();
-    z80.install_output(0x00, &buf);
+    z80.install_output(0x00, Box::new(buf.clone()));
 
     z80.load(program);
     z80.run();
