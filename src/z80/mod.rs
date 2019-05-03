@@ -462,6 +462,9 @@ impl Z80 {
     fn get_loc16(&self, loc: &ops::Location16) -> u16 {
         match loc {
             ops::Location16::Reg(reg) => self.registers.get_reg16(reg),
+            ops::Location16::RegIndirect(reg) => self.get_loc16(
+                &ops::Location16::ImmediateIndirect(self.registers.get_reg16(reg)),
+            ),
             ops::Location16::Immediate(n) => *n,
             ops::Location16::ImmediateIndirect(n) => u16::from_le_bytes([
                 self.memory.memory[*n as usize],
@@ -474,6 +477,10 @@ impl Z80 {
         match loc {
             ops::Location16::Immediate(_) => panic!("Attempting to set immediate value!"),
             ops::Location16::Reg(reg) => self.registers.set_reg16(reg, v),
+            ops::Location16::RegIndirect(reg) => self.set_loc16(
+                &ops::Location16::ImmediateIndirect(self.registers.get_reg16(reg)),
+                v,
+            ),
             ops::Location16::ImmediateIndirect(n) => {
                 let [n1, n2] = v.to_le_bytes();
                 self.memory.memory[*n as usize] = n1;
@@ -539,13 +546,11 @@ impl Z80 {
     }
 
     fn push_val(&mut self, val: u16) {
-        let [n0, n1] = val.to_be_bytes();
-        let mut sp = self.registers.get_reg16(&ops::Reg16::SP);
-        sp -= 1;
-        self.memory.memory[sp as usize] = n0;
-        sp -= 1;
-        self.memory.memory[sp as usize] = n1;
-        self.registers.set_reg16(&ops::Reg16::SP, sp);
+        self.registers.set_reg16(
+            &ops::Reg16::SP,
+            self.registers.get_reg16(&ops::Reg16::SP) - 2,
+        );
+        self.set_loc16(&ops::Location16::RegIndirect(ops::Reg16::SP), val);
     }
 
     fn push(&mut self, src: &ops::Location16) {
@@ -553,13 +558,12 @@ impl Z80 {
     }
 
     fn pop_val(&mut self) -> u16 {
-        let mut sp = self.registers.get_reg16(&ops::Reg16::SP);
-        let n0 = self.memory.memory[sp as usize];
-        sp += 1;
-        let n1 = self.memory.memory[sp as usize];
-        sp += 1;
-        self.registers.set_reg16(&ops::Reg16::SP, sp);
-        u16::from_le_bytes([n0, n1])
+        let n = self.get_loc16(&ops::Location16::RegIndirect(ops::Reg16::SP));
+        self.registers.set_reg16(
+            &ops::Reg16::SP,
+            self.registers.get_reg16(&ops::Reg16::SP) + 2,
+        );
+        n
     }
 
     fn pop(&mut self, dst: &ops::Location16) {

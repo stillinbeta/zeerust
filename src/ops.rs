@@ -214,7 +214,8 @@ pub enum Location8 {
 pub enum Location16 {
     /// A 16-bit combined register
     Reg(Reg16),
-    // RegIndirect(Reg16), // Is this used anywhere?
+    /// A location in memory, pointed to by a 16 bit register.
+    RegIndirect(Reg16), // Is this used anywhere?
     /// A location in memory, pointed to by a literal number
     ImmediateIndirect(u16),
     /// A literal number
