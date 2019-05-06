@@ -2,6 +2,8 @@
 [![docs.rs](https://docs.rs/zeerust/badge.svg)](https://docs.rs/zeerust/latest/zeerust/)
 [![Build Status](https://travis-ci.org/stillinbeta/zeerust.svg?branch=master)](https://travis-ci.org/stillinbeta/zeerust) 
 [![codecov](https://codecov.io/gh/stillinbeta/zeerust/branch/master/graph/badge.svg)](https://codecov.io/gh/stillinbeta/zeerust)
+<a href='http://www.recurse.com' title='Made with love at the Recurse Center'><img src='https://cloud.githubusercontent.com/assets/2883345/11325206/336ea5f4-9150-11e5-9e90-d86ad31993d8.png' height='20px'/></a>
+
 
 # Zeerust
 
